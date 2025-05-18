@@ -1,0 +1,22 @@
+<svg width="320" height="430" xmlns="http://www.w3.org/2000/svg">
+    <rect width="320" height="430" fill="#87CEEB"/>
+
+    <circle cx="280" cy="60" r="25" fill="#FFFAA0" opacity="0.8"/>
+
+    <g fill="#FFFFFF" opacity="0.9">
+        <rect x="30" y="50" width="60" height="20" rx="10" ry="10"/>
+        <rect x="50" y="40" width="70" height="25" rx="12" ry="12"/>
+        <rect x="80" y="55" width="50" height="20" rx="10" ry="10"/>
+
+        <rect x="180" y="80" width="50" height="15" rx="7" ry="7"/>
+        <rect x="200" y="70" width="60" height="20" rx="10" ry="10"/>
+
+        <rect x="270" y="120" width="50" height="20" rx="10" ry="10"/> <rect x="-20" y="120" width="50" height="20" rx="10" ry="10"/> </g>
+
+    <g fill="#4682B4" opacity="0.7"> <polygon points="0,430 0,300 40,250 80,300 80,430"/>
+        <polygon points="70,430 70,320 120,220 170,320 170,430"/>
+        <polygon points="160,430 160,300 200,260 240,300 240,430"/>
+        <polygon points="230,430 230,330 270,280 310,330 310,430"/>
+        <polygon points="300,430 300,300 320,280 320,430"/>
+        </g>
+    <rect y="350" width="320" height="80" fill="#556B2F" opacity="0.5" /> </svg>
