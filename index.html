@@ -22,33 +22,30 @@
             border: 2px solid #000;
             overflow: hidden;
             box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            background-color: #70c5ce; /* Fondo inicial por si el canvas tarda */
         }
         canvas {
             display: block;
-            background-color: transparent;
+            background-color: transparent; /* El fondo se dibuja en el canvas o lo da el container */
         }
-        #scoreDisplay {
+        .game-ui-element { /* Clase para elementos UI que se ocultan/muestran */
             position: absolute;
-            top: 20px;
             left: 50%;
             transform: translateX(-50%);
-            font-size: 30px;
-            font-weight: bold;
             color: white;
             text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000;
+            text-align: center;
             z-index: 10;
         }
+        #scoreDisplay {
+            top: 20px;
+            font-size: 30px;
+            font-weight: bold;
+        }
         #messageDisplay {
-            position: absolute;
             top: 40%;
-            left: 50%;
-            transform: translate(-50%, -50%);
             font-size: 24px;
             font-weight: bold;
-            color: white;
-            text-align: center;
-            text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000;
-            z-index: 10; 
             display: none;
             padding: 15px;
             background-color: rgba(0,0,0,0.4);
@@ -57,9 +54,7 @@
             box-sizing: border-box;
         }
         #finalVictoryMessage { 
-            position: absolute;
-            top: 0;
-            left: 0;
+            top: 0; left: 0; /* No necesita transform si es 100% width/height */
             width: 100%;
             height: 100%;
             background-color: rgba(0, 85, 120, 0.9); 
@@ -70,11 +65,8 @@
             align-items: center;
             padding: 20px;
             box-sizing: border-box;
-            color: white;
-            text-align: center;
             font-size: 28px; 
             font-weight: bold;
-            text-shadow: 2px 2px 4px #000;
         }
         #finalVictoryMessage small {
             font-size: 18px;
@@ -92,73 +84,77 @@
             border-radius: 5px;
             cursor: pointer;
             z-index: 11;
-            display: flex;
+            display: flex; /* Inicialmente oculto, se muestra al jugar */
             justify-content: center;
             align-items: center;
         }
-        .pauseIconBar {
-            width: 5px;
-            height: 20px;
-            background-color: white;
-            margin: 0 2px;
-        }
-        .playIconTriangle {
-            width: 0;
-            height: 0;
-            border-top: 10px solid transparent;
-            border-bottom: 10px solid transparent;
-            border-left: 18px solid white;
-        }
+        .pauseIconBar { width: 5px; height: 20px; background-color: white; margin: 0 2px; }
+        .playIconTriangle { width: 0; height: 0; border-top: 10px solid transparent; border-bottom: 10px solid transparent; border-left: 18px solid white; }
+        
         #questionModal {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.85); z-index: 20; display: none;
+            flex-direction: column; justify-content: center; align-items: center;
+            padding: 20px; box-sizing: border-box; color: white; text-align: center;
+        }
+        #questionText { font-size: 17px; margin-bottom: 15px; line-height: 1.4; }
+        #answerButtonsContainer button {
+            display: block; width: 90%; margin: 8px auto; padding: 10px; font-size: 15px;
+            background-color: #4CAF50; color: white; border: none; border-radius: 5px;
+            cursor: pointer; transition: background-color 0.3s;
+        }
+        #answerButtonsContainer button:hover { background-color: #45a049; }
+
+        /* Panel de Selección de Dificultad */
+        #difficultySelectionModal {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.85);
-            z-index: 20;
-            display: none;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            z-index: 30; /* Encima de todo al inicio */
+            display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
+            color: white;
             padding: 20px;
             box-sizing: border-box;
-            color: white;
             text-align: center;
         }
-        #questionText {
-            font-size: 17px;
-            margin-bottom: 15px;
-            line-height: 1.4;
+        #difficultySelectionModal h2 { margin-top: 0; margin-bottom: 20px; font-size: 22px; }
+        #difficultySelectionModal label { display: block; margin: 15px 0 5px 0; font-size: 16px;}
+        #difficultySlider { width: 80%; margin-bottom: 5px; }
+        #difficultyValue { font-weight: bold; font-size: 18px; margin-bottom: 20px; }
+        #difficultySelectionModal .checkbox-container { margin: 20px 0; font-size: 16px; }
+        #difficultySelectionModal .checkbox-container input { margin-right: 8px; vertical-align: middle;}
+        #startGameButton {
+            padding: 12px 25px; font-size: 18px; background-color: #28a745; color: white;
+            border: none; border-radius: 5px; cursor: pointer; transition: background-color 0.3s;
+            margin-top: 20px;
         }
-        #answerButtonsContainer button {
-            display: block;
-            width: 90%;
-            margin: 8px auto;
-            padding: 10px;
-            font-size: 15px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        #answerButtonsContainer button:hover {
-            background-color: #45a049;
-        }
+        #startGameButton:hover { background-color: #218838; }
     </style>
 </head>
 <body>
     <div id="gameContainer">
+        <div id="difficultySelectionModal">
+            <h2>Selecciona la Dificultad</h2>
+            <label for="difficultySlider">Nivel de Dificultad: <span id="difficultyValue">5</span></label>
+            <input type="range" id="difficultySlider" min="1" max="10" value="5">
+            
+            <div class="checkbox-container">
+                <input type="checkbox" id="progressiveDifficultyCheckbox">
+                <label for="progressiveDifficultyCheckbox">Dificultad en Crecimiento (cada 3 puntos)</label>
+            </div>
+
+            <button id="startGameButton">Iniciar Juego</button>
+        </div>
+
         <canvas id="gameCanvas"></canvas>
-        <div id="scoreDisplay">0</div>
-        <div id="messageDisplay"></div>
-        <div id="finalVictoryMessage"> ¡Eres lo mejor que hay, muchas gracias!!<br>¡GANASTE!
+        <div id="scoreDisplay" class="game-ui-element" style="display: none;">0</div>
+        <div id="messageDisplay" class="game-ui-element"></div> <div id="finalVictoryMessage" class="game-ui-element"> ¡Eres lo mejor que hay, muchas gracias!!<br>¡GANASTE!
             <br><small>Pulsa para jugar de nuevo</small>
         </div>
-        <div id="pauseButton"></div>
-        <div id="questionModal">
+        <div id="pauseButton" style="display: none;"></div> <div id="questionModal">
             <div id="questionText"></div>
             <div id="answerButtonsContainer"></div>
         </div>
@@ -176,32 +172,46 @@
         const questionText = document.getElementById('questionText');
         const answerButtonsContainer = document.getElementById('answerButtonsContainer');
 
-        canvas.width = 320;
-        canvas.height = 480;
+        // Elementos del Panel de Dificultad
+        const difficultySelectionModal = document.getElementById('difficultySelectionModal');
+        const difficultySlider = document.getElementById('difficultySlider');
+        const difficultyValueDisplay = document.getElementById('difficultyValue');
+        const progressiveDifficultyCheckbox = document.getElementById('progressiveDifficultyCheckbox');
+        const startGameButton = document.getElementById('startGameButton');
 
-        // --- ASSETS (Imágenes) ---
-        const motoFoxImg = new Image(); motoFoxImg.src = './imagenes/motozorro.png';
-        const pipeTopImg = new Image(); pipeTopImg.src = './imagenes/tuberia_arriba.svg';
-        const pipeBottomImg = new Image(); pipeBottomImg.src = './imagenes/tuberia_abajo.svg';
-        const groundImg = new Image(); groundImg.src = './imagenes/suelo.svg';
-        const bgImg = new Image(); bgImg.src = './imagenes/fondo_juego.svg';
-        const dancingFoxImg = new Image(); dancingFoxImg.src = 'data:image/gif;base64,R0lGODlhIAAgAPIEAAAAAP/OAAAA/84A////AAAAACH/C05FVFNDQVBFMi4wAwEAAAAh+QQJFAACACwAAAAAIAAgAAADXei63P4wykmrvTjrzbv/YCiOZGmeaKqubOu+cCzPdG3feK7vfO//wKBwSCwaj8ikcslsOp/QqHRKrVqv2Kx2y+16v+CweEwum8/otHrNbrvf8Lh8Tq/b7/i8fs/v+/+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChooqMhR0AAAAh+QQJFAACACwEAAIAFwAWAAADQHi63P4wykmrvTjrzbv/YCiOZGmeaKqubOu+cCzPdG3feK7vfO//wKAwSBQeiEghlHMpyfE0pFQrjVLjB+xOq3f0mJxbM9oVAAA7';
+        canvas.width = 320; canvas.height = 480;
+
+        // --- ASSETS ---
+        const motoFoxImg = new Image();
+        const pipeTopImg = new Image();
+        const pipeBottomImg = new Image();
+        const groundImg = new Image();
+        const bgImg = new Image();
+        const dancingFoxImg = new Image(); 
+
+        motoFoxImg.src = './imagenes/motozorro.png';
+        pipeTopImg.src = './imagenes/tuberia_arriba.svg';
+        pipeBottomImg.src = './imagenes/tuberia_abajo.svg';
+        groundImg.src = './imagenes/suelo.svg';
+        bgImg.src = './imagenes/fondo_juego.svg';
+        dancingFoxImg.src = 'data:image/gif;base64,R0lGODlhIAAgAPIEAAAAAP/OAAAA/84A////AAAAACH/C05FVFNDQVBFMi4wAwEAAAAh+QQJFAACACwAAAAAIAAgAAADXei63P4wykmrvTjrzbv/YCiOZGmeaKqubOu+cCzPdG3feK7vfO//wKBwSCwaj8ikcslsOp/QqHRKrVqv2Kx2y+16v+CweEwum8/otHrNbrvf8Lh8Tq/b7/i8fs/v+/+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChooqMhR0AAAAh+QQJFAACACwEAAIAFwAWAAADQHi63P4wykmrvTjrzbv/YCiOZGmeaKqubOu+cCzPdG3feK7vfO//wKAwSBQeiEghlHMpyfE0pFQrjVLjB+xOq3f0mJxbM9oVAAA7';
+
 
         // --- Variables del Juego ---
         let motoX, motoY, motoVelocity, motoSize;
-        let gravity;
+        let gravity, currentGravity; 
         let pipes;
-        let pipeWidth, pipeGap, pipeOriginalSpeed;
+        let pipeWidth, pipeGap, currentPipeGap;
+        let pipeOriginalSpeed, currentPipeSpeed;
         let score;
-        let gameState;
+        let gameState = 'DIFFICULTY_SELECTION'; 
         let isPaused = false;
         let groundHeight = 50;
         let groundX = 0;
 
         // --- Variables para Delta Time ---
         let lastTime = 0;
-        const TARGET_FPS = 60; // El juego se balanceó originalmente pensando en esta tasa de frames
-        // const TARGET_DELTATIME = 1 / TARGET_FPS; // No se usa directamente, pero es la base
+        const TARGET_FPS = 60;
 
         // --- Variables para el Sistema de Preguntas ---
         let isAnsweringQuestion = false;
@@ -225,71 +235,114 @@
         let milestonesReached = [];
         let lastScoreThatTriggeredQuestion = 0;
         
+        // --- Variables de Dificultad ---
+        let currentDifficultyLevel = 5; 
+        let progressiveDifficultyEnabled = false;
+        let lastDifficultyIncreaseScore = 0;
         let pipeSpawnTimer = 0;
-        // Ajuste de dificultad: Intervalo de aparición de tuberías reducido
-        const PIPE_SPAWN_INTERVAL = 1.665; // Original: 3.33 (aprox. la mitad)
+        let PIPE_SPAWN_INTERVAL, currentPipeSpawnInterval; 
 
-        function init() {
+        const difficultyParams = {
+            gravity:           { min: 0.04, max: 0.20 }, 
+            pipeSpeed:         { min: 0.7,  max: 3.5  }, 
+            pipeSpawnInterval: { min: 4.0,  max: 1.0  }, 
+            pipeGap:           { min: 250,  max: 110  }  
+        };
+
+        function applyDifficultySettings(level) {
+            const factor = (level - 1) / 9; 
+
+            gravity = difficultyParams.gravity.min + (difficultyParams.gravity.max - difficultyParams.gravity.min) * factor;
+            pipeOriginalSpeed = difficultyParams.pipeSpeed.min + (difficultyParams.pipeSpeed.max - difficultyParams.pipeSpeed.min) * factor;
+            PIPE_SPAWN_INTERVAL = difficultyParams.pipeSpawnInterval.max - (difficultyParams.pipeSpawnInterval.max - difficultyParams.pipeSpawnInterval.min) * factor; 
+            pipeGap = difficultyParams.pipeGap.max - (difficultyParams.pipeGap.max - difficultyParams.pipeGap.min) * factor; 
+
+            currentGravity = gravity;
+            currentPipeSpeed = pipeOriginalSpeed;
+            currentPipeSpawnInterval = PIPE_SPAWN_INTERVAL;
+            currentPipeGap = pipeGap;
+
+            console.log(`Dificultad Nivel ${level}: G=${gravity.toFixed(3)}, Speed=${pipeOriginalSpeed.toFixed(2)}, Spawn=${PIPE_SPAWN_INTERVAL.toFixed(2)}s, Gap=${pipeGap.toFixed(0)}px`);
+        }
+
+        function increaseDifficultyStep() {
+            currentGravity += 0.003; 
+            currentPipeSpeed += 0.08;   
+            if (currentPipeSpawnInterval > 0.8) currentPipeSpawnInterval -= 0.04; 
+            if (currentPipeGap > 100) currentPipeGap -= 2; 
+            
+            console.log(`Dificultad Progresiva: G=${currentGravity.toFixed(3)}, Speed=${currentPipeSpeed.toFixed(2)}, Spawn=${currentPipeSpawnInterval.toFixed(2)}s, Gap=${currentPipeGap.toFixed(0)}px`);
+        }
+
+        function initGameLogic() { 
             motoSize = 40; motoX = 60; motoY = canvas.height / 2 - motoSize / 2;
             motoVelocity = 0; 
-            // Ajuste de dificultad: Gravedad aumentada
-            gravity = 0.10; // Original: 0.05
-            pipes = []; pipeWidth = 64; pipeGap = 220; // El gap podría reducirse para más dificultad, pero por ahora solo velocidad
-            // Ajuste de dificultad: Velocidad de tuberías aumentada
-            pipeOriginalSpeed = 1.6; // Original: 0.8
+            pipes = []; pipeWidth = 64; 
             score = 0; 
-            gameState = 'READY';
+            
             isPaused = false; 
             isAnsweringQuestion = false; questionModal.style.display = 'none';
             finalVictoryMessageDisplay.style.display = 'none'; 
+            messageDisplay.style.display = 'none'; 
+            scoreDisplay.style.display = 'block'; 
+            pauseButton.style.display = 'flex';   
             
             availableQuestions = [...questions]; 
             questionsAnsweredCorrectlyThisSession = 0; 
             milestonesReached = [];
             lastScoreThatTriggeredQuestion = 0;
-            pipeSpawnTimer = PIPE_SPAWN_INTERVAL; // Para que la primera tubería aparezca antes
+            lastDifficultyIncreaseScore = 0; 
+            pipeSpawnTimer = currentPipeSpawnInterval; 
 
             lastTime = 0; 
 
             updatePauseButtonIcon();
             scoreDisplay.textContent = score;
-            messageDisplay.innerHTML = 'Pulsa o haz clic<br>para Empezar la Aventura';
-            messageDisplay.style.display = 'block';
-            messageDisplay.style.top = '40%';
-            pauseButton.style.display = 'flex'; 
         }
 
-        function drawMoto() {
+        difficultySlider.addEventListener('input', (e) => {
+            currentDifficultyLevel = parseInt(e.target.value);
+            difficultyValueDisplay.textContent = currentDifficultyLevel;
+        });
+
+        startGameButton.addEventListener('click', () => {
+            applyDifficultySettings(currentDifficultyLevel);
+            progressiveDifficultyEnabled = progressiveDifficultyCheckbox.checked;
+            
+            difficultySelectionModal.style.display = 'none'; 
+            gameState = 'READY'; 
+            messageDisplay.innerHTML = 'Pulsa o haz clic<br>para Empezar la Aventura';
+            messageDisplay.style.display = 'block';
+        });
+
+        function drawMoto() { 
             ctx.save();
             ctx.translate(motoX + motoSize / 2, motoY + motoSize / 2);
             let angle = Math.min(Math.PI / 8, motoVelocity * 0.08); ctx.rotate(angle);
-            if (motoFoxImg.complete && motoFoxImg.naturalWidth !== 0) {
+            if (motoFoxImg.complete && motoFoxImg.naturalWidth > 0) {
                 ctx.drawImage(motoFoxImg, -motoSize / 2, -motoSize / 2, motoSize, motoSize);
-            } else { ctx.fillStyle = 'orange'; ctx.fillRect(-motoSize / 2, -motoSize / 2, motoSize, motoSize); }
+            }
             ctx.restore();
         }
-
-        function drawPipes() {
+        function drawPipes() { 
             pipes.forEach(pipe => {
-                if (pipeTopImg.complete && pipeTopImg.naturalWidth !== 0) {
+                if (pipeTopImg.complete && pipeTopImg.naturalWidth > 0) {
                     ctx.drawImage(pipeTopImg, pipe.x, 0, pipeWidth, pipe.topHeight);
-                } else { ctx.fillStyle = 'green'; ctx.fillRect(pipe.x, 0, pipeWidth, pipe.topHeight); }
-                if (pipeBottomImg.complete && pipeBottomImg.naturalWidth !== 0) {
-                    ctx.drawImage(pipeBottomImg, pipe.x, pipe.topHeight + pipeGap, pipeWidth, canvas.height - pipe.topHeight - pipeGap - groundHeight);
-                } else { ctx.fillStyle = 'green'; ctx.fillRect(pipe.x, pipe.topHeight + pipeGap, pipeWidth, canvas.height - pipe.topHeight - pipeGap - groundHeight); }
+                }
+                if (pipeBottomImg.complete && pipeBottomImg.naturalWidth > 0) {
+                    ctx.drawImage(pipeBottomImg, pipe.x, pipe.topHeight + currentPipeGap, pipeWidth, canvas.height - pipe.topHeight - currentPipeGap - groundHeight);
+                }
             });
         }
-
-        function drawGround() {
-            if (groundImg.complete && groundImg.naturalWidth !== 0 && groundImg.width > 0) {
+        function drawGround() { 
+            if (groundImg.complete && groundImg.naturalWidth > 0 && groundImg.width > 0) {
                  for (let i = 0; (i * groundImg.width) + groundX < canvas.width + groundImg.width; i++) {
                     ctx.drawImage(groundImg, (i * groundImg.width) + groundX, canvas.height - groundHeight, groundImg.width, groundHeight);
                 }
-            } else { ctx.fillStyle = '#d2b48c'; ctx.fillRect(0, canvas.height - groundHeight, canvas.width, groundHeight); }
+            }
         }
-
-        function drawBackground() {
-            if (bgImg.complete && bgImg.naturalWidth !== 0 && bgImg.width > 0) {
+        function drawBackground() { 
+            if (bgImg.complete && bgImg.naturalWidth > 0 && bgImg.width > 0) { 
                  for (let i = 0; (i * bgImg.width) + (groundX * 0.5) < canvas.width + bgImg.width; i++) {
                     let bgX = (i * bgImg.width) + (groundX * 0.5);
                     while (bgX <= -bgImg.width && bgImg.width > 0) { bgX += bgImg.width; }
@@ -298,33 +351,39 @@
             }
         }
         
-        function updateMoto(deltaTime) {
-            motoVelocity += gravity * TARGET_FPS * deltaTime;
+        function updateMoto(deltaTime) { 
+            motoVelocity += currentGravity * TARGET_FPS * deltaTime;
             motoY += motoVelocity * TARGET_FPS * deltaTime;
             if (motoY < -motoSize * 0.2) { 
                 motoY = -motoSize * 0.2; 
-                motoVelocity = gravity * 2 * TARGET_FPS * deltaTime; 
+                motoVelocity = currentGravity * 2 * TARGET_FPS * deltaTime; 
             }
         }
 
-        function updatePipes(deltaTime) {
+        function updatePipes(deltaTime) { 
             pipeSpawnTimer += deltaTime;
-            if (pipeSpawnTimer >= PIPE_SPAWN_INTERVAL) {
+            if (pipeSpawnTimer >= currentPipeSpawnInterval) {
                 pipeSpawnTimer = 0; 
                 let minTopHeight = 80;
-                let maxTopHeightPossible = canvas.height - groundHeight - pipeGap - 80;
+                let maxTopHeightPossible = canvas.height - groundHeight - currentPipeGap - 80;
+                if (maxTopHeightPossible < minTopHeight) maxTopHeightPossible = minTopHeight + 10; 
                 let topHeight = Math.random() * (maxTopHeightPossible - minTopHeight) + minTopHeight;
                 pipes.push({ x: canvas.width, topHeight: topHeight, passed: false });
             }
 
             pipes.forEach(pipe => {
-                pipe.x -= pipeOriginalSpeed * TARGET_FPS * deltaTime; 
+                pipe.x -= currentPipeSpeed * TARGET_FPS * deltaTime; 
                 if (pipe.x + pipeWidth < 0) { pipes.shift(); }
 
                 if (!pipe.passed && pipe.x + pipeWidth < motoX) {
                     pipe.passed = true;
                     score++;
                     scoreDisplay.textContent = score;
+
+                    if (progressiveDifficultyEnabled && score > 0 && score % 3 === 0 && score !== lastDifficultyIncreaseScore) {
+                        increaseDifficultyStep();
+                        lastDifficultyIncreaseScore = score;
+                    }
 
                     let questionShouldBeTriggered = false;
                     for (let i = 0; i < questionMilestones.length; i++) {
@@ -356,35 +415,38 @@
             });
         }
 
-        function checkCollisions() { 
+        function checkCollisions() {   
             if (gameState !== 'PLAYING' || isAnsweringQuestion) return;
             if (motoY + motoSize > canvas.height - groundHeight) {
                 motoY = canvas.height - groundHeight - motoSize;
                 gameOver("¡Caíste al suelo!"); return;
             }
             for (let pipe of pipes) {
-                const m = 2;
+                const m = 2; 
                 if (motoX + motoSize - m > pipe.x && motoX + m < pipe.x + pipeWidth &&
-                    (motoY + m < pipe.topHeight || motoY + motoSize - m > pipe.topHeight + pipeGap)) {
+                    motoY + motoSize - m > pipe.topHeight + currentPipeGap) { 
+                    gameOver("¡Chocaste con una tubería!"); return;
+                }
+                if (motoX + motoSize - m > pipe.x && motoX + m < pipe.x + pipeWidth &&
+                    motoY + m < pipe.topHeight) {
                     gameOver("¡Chocaste con una tubería!"); return;
                 }
             }
         }
 
-        function updateGround(deltaTime) {
-            groundX -= pipeOriginalSpeed * TARGET_FPS * deltaTime; 
-            if (groundImg.complete && groundImg.naturalWidth !== 0 && groundImg.width > 0) {
+        function updateGround(deltaTime) { 
+            groundX -= currentPipeSpeed * TARGET_FPS * deltaTime; 
+            if (groundImg.complete && groundImg.naturalWidth > 0 && groundImg.width > 0) {
                 if (groundX <= -groundImg.width) { groundX += groundImg.width; }
             }
         }
 
-        function flap() {
+        function flap() { 
             if (gameState === 'PLAYING' && !isPaused && !isAnsweringQuestion) {
-                motoVelocity = -2.8; // El impulso del salto se mantiene, pero la gravedad aumentada lo hace más difícil
+                motoVelocity = -2.8; 
             }
         }
-
-        function gameOver(reason = "¡Oh no, Zorro!") {
+        function gameOver(reason = "¡Oh no, Zorro!") { 
             if (gameState === 'GAMEOVER' || gameState === 'ENDING' || gameState === 'FINAL_VICTORY') return;
             gameState = 'GAMEOVER'; 
             isPaused = true; 
@@ -393,16 +455,15 @@
             questionModal.style.display = 'none';
             finalVictoryMessageDisplay.style.display = 'none'; 
         }
-        
-        function drawGroundStatic() {
-            if (groundImg.complete && groundImg.naturalWidth !== 0 && groundImg.width > 0) {
+        function drawGroundStatic() { 
+            if (groundImg.complete && groundImg.naturalWidth > 0 && groundImg.width > 0) {
                  for (let i = 0; (i * groundImg.width) < canvas.width + groundImg.width; i++) {
                     ctx.drawImage(groundImg, (i * groundImg.width), canvas.height - groundHeight, groundImg.width, groundHeight);
                 }
             } else { ctx.fillStyle = '#d2b48c'; ctx.fillRect(0, canvas.height - groundHeight, canvas.width, groundHeight); }
         }
-        function drawBackgroundStatic() { 
-            if (bgImg.complete && bgImg.naturalWidth !== 0 && bgImg.width > 0) {
+        function drawBackgroundStatic() {   
+            if (bgImg.complete && bgImg.naturalWidth > 0 && bgImg.width > 0) {
                  for (let i = 0; (i * bgImg.width) < canvas.width + bgImg.width; i++) {
                     ctx.drawImage(bgImg, (i * bgImg.width) , 0, bgImg.width, canvas.height - groundHeight);
                 }
@@ -411,8 +472,7 @@
                 ctx.fillRect(0,0, canvas.width, canvas.height - groundHeight);
             }
         }
-
-        function enterEndingSequence() { 
+        function enterEndingSequence() {   
             if (gameState === 'FINAL_VICTORY') return; 
             gameState = 'ENDING'; pipes = [];
             motoX = canvas.width / 2 - motoSize / 2; motoY = canvas.height - groundHeight - motoSize - 10;
@@ -420,22 +480,20 @@
             messageDisplay.style.top = '30%'; messageDisplay.style.display = 'block';
             pauseButton.style.display = 'none';
         }
-
-        function drawEndingSequence() {
+        function drawEndingSequence() { 
             ctx.fillStyle = '#303030'; ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.fillStyle = '#505050';
             for(let y=0; y<canvas.height; y+=20) for(let x=(y/20)%2===0?0:-10; x<canvas.width; x+=40) ctx.fillRect(x,y,38,18);
             ctx.fillStyle = '#404040'; ctx.fillRect(0, canvas.height - groundHeight + 10, canvas.width, groundHeight-10);
             const dFS = 64;
-            if (dancingFoxImg.complete && dancingFoxImg.naturalWidth !== 0) {
+            if (dancingFoxImg.complete && dancingFoxImg.naturalWidth > 0) {
                  ctx.drawImage(dancingFoxImg, canvas.width/2 - dFS/2, canvas.height - groundHeight - dFS + 10, dFS, dFS);
             } else { ctx.fillStyle = 'orange'; ctx.fillRect(canvas.width/2 - motoSize/2, canvas.height - groundHeight - motoSize + 10, motoSize, motoSize); }
             ctx.fillStyle='orange'; ctx.fillRect(canvas.width*0.2-5,canvas.height*0.6-10,10,20); ctx.fillStyle='red'; ctx.beginPath(); ctx.arc(canvas.width*0.2,canvas.height*0.6-15,7,0,Math.PI*2); ctx.fill();
             ctx.fillStyle='orange'; ctx.fillRect(canvas.width*0.8-5,canvas.height*0.6-10,10,20); ctx.fillStyle='red'; ctx.beginPath(); ctx.arc(canvas.width*0.8,canvas.height*0.6-15,7,0,Math.PI*2); ctx.fill();
             scoreDisplay.textContent = '9999';
         }
-
-        function showFinalVictory() {
+        function showFinalVictory() { 
             gameState = 'FINAL_VICTORY';
             isPaused = true;
             questionModal.style.display = 'none';
@@ -443,8 +501,7 @@
             finalVictoryMessageDisplay.style.display = 'flex';
             pauseButton.style.display = 'none'; 
         }
-
-        function triggerQuestion() {
+        function triggerQuestion() { 
             if (availableQuestions.length === 0) { 
                 console.log("Se intentó disparar pregunta, pero ya no hay disponibles.");
                 if (gameState !== 'FINAL_VICTORY') { 
@@ -471,8 +528,7 @@
             });
             questionModal.style.display = 'flex';
         }
-
-        function selectAnswer(selectedIndex) {
+        function selectAnswer(selectedIndex) { 
             if (!currentQuestionData) return;
 
             if (selectedIndex === currentQuestionData.correctAnswerIndex) {
@@ -498,8 +554,21 @@
         }
         
         function gameLoop(timestamp) {
-            if (lastTime === 0) { lastTime = timestamp; }
-            let deltaTime = (timestamp - lastTime) / 1000; 
+            if (gameState === 'DIFFICULTY_SELECTION') { 
+                requestAnimationFrame(gameLoop);
+                return;
+            }
+
+            if (lastTime === 0 && gameState !== 'READY') { 
+                 lastTime = timestamp;
+            } else if (gameState === 'READY') { 
+                lastTime = 0; 
+            }
+
+            let deltaTime = 0;
+            if (lastTime !== 0) { 
+                deltaTime = (timestamp - lastTime) / 1000;
+            }
             lastTime = timestamp;
             deltaTime = Math.min(deltaTime, 0.1); 
 
@@ -511,7 +580,7 @@
                 return; 
             }
 
-            if (!isPaused) { 
+            if (!isPaused && gameState !== 'READY') { 
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 if (gameState === 'ENDING') { drawEndingSequence(); }
                 else { 
@@ -523,6 +592,10 @@
                         checkCollisions(); 
                     }
                 }
+            } else if (gameState === 'READY' && !isPaused) { 
+                 ctx.clearRect(0, 0, canvas.width, canvas.height);
+                 drawBackgroundStatic(); 
+                 drawGroundStatic();
             }
             requestAnimationFrame(gameLoop); 
         }
@@ -531,26 +604,36 @@
             if (isAnsweringQuestion && gameState !== 'GAMEOVER') return;
             
             if (gameState === 'FINAL_VICTORY') { 
-                init();
+                difficultySelectionModal.style.display = 'flex'; 
+                finalVictoryMessageDisplay.style.display = 'none';
+                scoreDisplay.style.display = 'none';
+                pauseButton.style.display = 'none';
+                gameState = 'DIFFICULTY_SELECTION'; 
                 return;
             }
             
             if (isPaused && gameState !== 'GAMEOVER' && gameState !== 'READY') return;
 
             if (gameState === 'READY') {
-                gameState = 'PLAYING'; isPaused = false;
-                messageDisplay.style.display = 'none'; pauseButton.style.display = 'flex';
+                initGameLogic(); 
+                gameState = 'PLAYING'; 
+                isPaused = false; 
+                messageDisplay.style.display = 'none'; 
                 lastTime = 0; 
                 flap();
             } else if (gameState === 'PLAYING' && !isPaused) { 
                  flap(); 
             } else if (gameState === 'GAMEOVER' || gameState === 'ENDING') { 
-                init(); 
+                difficultySelectionModal.style.display = 'flex'; 
+                messageDisplay.style.display = 'none'; 
+                scoreDisplay.style.display = 'none';
+                pauseButton.style.display = 'none';
+                gameState = 'DIFFICULTY_SELECTION'; 
             }
         }
         
         function togglePause() {
-            if (isAnsweringQuestion || gameState === 'ENDING' || gameState === 'GAMEOVER' || gameState === 'READY' || gameState === 'FINAL_VICTORY') return;
+            if (isAnsweringQuestion || gameState === 'ENDING' || gameState === 'GAMEOVER' || gameState === 'READY' || gameState === 'FINAL_VICTORY' || gameState === 'DIFFICULTY_SELECTION') return;
             if (gameState === 'PLAYING' || gameState === 'PAUSED') {
                 isPaused = !isPaused; 
                 if (!isPaused) { 
@@ -572,43 +655,65 @@
         }
 
         gameContainer.addEventListener('click', (event) => {
-            if (event.target !== pauseButton && !pauseButton.contains(event.target) &&
-                event.target !== questionModal && !questionModal.contains(event.target) &&
-                event.target !== finalVictoryMessageDisplay && !finalVictoryMessageDisplay.contains(event.target) ) { 
-                handleInput();
+            if (difficultySelectionModal.style.display === 'flex' && difficultySelectionModal.contains(event.target)) return;
+            if (questionModal.style.display === 'flex' && questionModal.contains(event.target)) return;
+            if (finalVictoryMessageDisplay.style.display === 'flex' && finalVictoryMessageDisplay.contains(event.target)) {
+                 handleInput(); 
+                 return;
             }
+            if (event.target === pauseButton || (pauseButton && pauseButton.contains(event.target))) return;
+            handleInput();
         });
+
         window.addEventListener('keydown', (e) => {
-            if (e.code === 'Space' || e.key === ' ') { e.preventDefault(); handleInput(); }
+            if (e.code === 'Space' || e.key === ' ') { 
+                e.preventDefault(); 
+                if (difficultySelectionModal.style.display === 'flex') return; 
+                handleInput(); 
+            }
         });
         pauseButton.addEventListener('click', (event) => { event.stopPropagation(); togglePause(); });
 
-        // --- Carga de Assets ---
-        const assetList = [motoFoxImg, pipeTopImg, pipeBottomImg, groundImg, bgImg];
+        // --- Carga de Assets e Inicio ---
+        const assetList = [
+            {img: motoFoxImg, src: './imagenes/motozorro.png', placeholder: 'https://placehold.co/40x40/FFA500/FFFFFF?text=Zorro', name: 'motoFoxImg'},
+            {img: pipeTopImg, src: './imagenes/tuberia_arriba.svg', placeholder: 'https://placehold.co/64x200/008000/FFFFFF?text=Tubo', name: 'pipeTopImg'},
+            {img: pipeBottomImg, src: './imagenes/tuberia_abajo.svg', placeholder: 'https://placehold.co/64x200/008000/FFFFFF?text=Tubo', name: 'pipeBottomImg'},
+            {img: groundImg, src: './imagenes/suelo.svg', placeholder: `https://placehold.co/${canvas.width}x${groundHeight}/D2B48C/000000?text=Suelo`, name: 'groundImg'},
+            {img: bgImg, src: './imagenes/fondo_juego.svg', placeholder: `https://placehold.co/${canvas.width}x${canvas.height - groundHeight}/70C5CE/FFFFFF?text=Fondo`, name: 'bgImg'}
+        ];
         let assetsToLoadCount = assetList.length; 
         let assetsLoadedCount = 0;
 
-        function assetLoadedCallback(imgEl, imgPath) {
-            assetsLoadedCount++; console.log(`Asset cargado: ${imgPath} (${assetsLoadedCount}/${assetsToLoadCount})`);
+        function assetLoadedCallback(assetName, isPlaceholder) {
+            assetsLoadedCount++; 
+            if (isPlaceholder) {
+                console.log(`Placeholder para ${assetName} cargado (${assetsLoadedCount}/${assetsToLoadCount})`);
+            } else {
+                console.log(`Asset ${assetName} (${assetEntry.src}) cargado (${assetsLoadedCount}/${assetsToLoadCount})`);
+            }
+            
             if (assetsLoadedCount === assetsToLoadCount) { 
-                console.log("¡Todos los assets principales cargados! Iniciando juego..."); 
-                init(); 
+                console.log("¡Todos los assets principales (o sus fallbacks) listos!"); 
                 requestAnimationFrame(gameLoop);
             }
         }
-        function assetErrorCallback(imgEl, imgPath) {
-            console.error(`Error al cargar la imagen: ${imgPath}.`); assetsLoadedCount++;
-            if (assetsLoadedCount === assetsToLoadCount) { 
-                console.warn("Juego iniciado con algunos assets faltantes. Se usarán fallbacks."); 
-                init(); 
-                requestAnimationFrame(gameLoop);
-            }
+
+        function assetErrorFallback(assetEntry) {
+            // Mensaje de error más explícito para el usuario
+            console.error(`FALLO AL CARGAR: "${assetEntry.src}" - VERIFICA LA RUTA Y EL NOMBRE DEL ARCHIVO. Usando placeholder temporal: "${assetEntry.placeholder}"`);
+            assetEntry.img.onerror = null; // Prevenir bucles de error si el placeholder también falla
+            assetEntry.img.src = assetEntry.placeholder;
+            // Cuando el placeholder se cargue, llamar a assetLoadedCallback
+            assetEntry.img.onload = () => assetLoadedCallback(assetEntry.name, true); 
         }
-        assetList.forEach(img => { 
-            const path = img.src; 
-            img.onload = () => assetLoadedCallback(img, path);
-            img.onerror = () => assetErrorCallback(img, path);
+
+        assetList.forEach(assetEntry => { 
+            assetEntry.img.onload = () => assetLoadedCallback(assetEntry.name, false);
+            assetEntry.img.onerror = () => assetErrorFallback(assetEntry);
+            // El src ya está asignado arriba, así que la carga comienza inmediatamente.
         });
+
         dancingFoxImg.onload = () => console.log("Dancing fox GIF (base64) cargado.");
         dancingFoxImg.onerror = () => console.warn('Error al cargar dancingFoxImg (base64).');
 
