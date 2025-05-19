@@ -3,58 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Moto Zorro Veloz - ¡Aventura Súper Fácil!</title>
+    <title>Moto Zorro Veloz - ¡Aventura con Preguntas de Bartolo!</title>
     <style>
         body {
             margin: 0;
-            overflow: hidden; /* Evita scrollbars si el canvas es más grande que la ventana */
-            background-color: #70c5ce; /* Cielo azul estilo Flappy Bird */
+            overflow: hidden;
+            background-color: #70c5ce;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh; /* Ocupa toda la altura de la ventana */
-            font-family: 'Arial', sans-serif; /* Fuente genérica por si falla la carga de otras */
+            height: 100vh;
+            font-family: 'Arial', sans-serif;
         }
         #gameContainer {
-            position: relative; /* Necesario para posicionar elementos absolutos internos */
-            width: 320px; /* Ancho típico de Flappy Bird */
-            height: 480px; /* Alto típico */
-            border: 2px solid #000; /* Borde para delimitar el área de juego */
-            overflow: hidden; /* Asegura que nada se salga del contenedor del juego */
-            box-shadow: 0 0 10px rgba(0,0,0,0.5); /* Sombra para darle profundidad */
+            position: relative;
+            width: 320px;
+            height: 480px;
+            border: 2px solid #000;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
         }
         canvas {
-            display: block; /* Evita espacios extra debajo del canvas */
-            background-color: transparent; /* El fondo lo maneja el div o el dibujo en canvas */
+            display: block;
+            background-color: transparent;
         }
         #scoreDisplay {
             position: absolute;
             top: 20px;
             left: 50%;
-            transform: translateX(-50%); /* Centra el score horizontalmente */
+            transform: translateX(-50%);
             font-size: 30px;
             font-weight: bold;
             color: white;
-            text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000; /* Contorno para legibilidad */
-            z-index: 10; /* Asegura que esté sobre el canvas */
+            text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000;
+            z-index: 10;
         }
         #messageDisplay {
             position: absolute;
             top: 40%;
             left: 50%;
-            transform: translate(-50%, -50%); /* Centra el mensaje */
+            transform: translate(-50%, -50%);
             font-size: 24px;
             font-weight: bold;
             color: white;
             text-align: center;
             text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000;
             z-index: 10;
-            display: none; /* Oculto inicialmente */
+            display: none;
             padding: 15px;
-            background-color: rgba(0,0,0,0.4); /* Fondo semitransparente */
+            background-color: rgba(0,0,0,0.4);
             border-radius: 8px;
-            width: 80%; /* Para que no sea demasiado ancho */
-            box-sizing: border-box; /* Para que el padding no aumente el ancho */
+            width: 80%;
+            box-sizing: border-box;
         }
         #pauseButton {
             position: absolute;
@@ -66,7 +66,7 @@
             border: 2px solid white;
             border-radius: 5px;
             cursor: pointer;
-            z-index: 11; /* Encima del score y mensajes */
+            z-index: 11;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -75,14 +75,54 @@
             width: 5px;
             height: 20px;
             background-color: white;
-            margin: 0 2px; /* Espacio entre las barras */
+            margin: 0 2px;
         }
         .playIconTriangle {
             width: 0;
             height: 0;
-            border-top: 10px solid transparent; /* Crea un triángulo con bordes */
+            border-top: 10px solid transparent;
             border-bottom: 10px solid transparent;
             border-left: 18px solid white;
+        }
+
+        /* Estilos para el Modal de Preguntas */
+        #questionModal {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            z-index: 20;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+            color: white;
+            text-align: center;
+        }
+        #questionText {
+            font-size: 17px; /* Ligeramente más pequeño para preguntas largas */
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+        #answerButtonsContainer button {
+            display: block;
+            width: 90%; /* Un poco más ancho */
+            margin: 8px auto; /* Menos margen vertical */
+            padding: 10px; /* Un poco menos padding */
+            font-size: 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        #answerButtonsContainer button:hover {
+            background-color: #45a049;
         }
     </style>
 </head>
@@ -91,602 +131,423 @@
         <canvas id="gameCanvas"></canvas>
         <div id="scoreDisplay">0</div>
         <div id="messageDisplay"></div>
-        <div id="pauseButton">
-            </div>
+        <div id="pauseButton"></div>
+        <div id="questionModal">
+            <div id="questionText"></div>
+            <div id="answerButtonsContainer"></div>
+        </div>
     </div>
 
     <script>
         // --- Elementos del DOM ---
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-        const gameContainer = document.getElementById('gameContainer'); // Aunque no se usa directamente en JS, es bueno tener la referencia
         const scoreDisplay = document.getElementById('scoreDisplay');
         const messageDisplay = document.getElementById('messageDisplay');
         const pauseButton = document.getElementById('pauseButton');
+        const questionModal = document.getElementById('questionModal');
+        const questionText = document.getElementById('questionText');
+        const answerButtonsContainer = document.getElementById('answerButtonsContainer');
 
-        // --- Configuración del Canvas ---
-        // Es mejor establecer el tamaño del canvas aquí en lugar de CSS para evitar distorsiones
         canvas.width = 320;
         canvas.height = 480;
 
         // --- ASSETS (Imágenes) ---
-        // Se recomienda tener una carpeta 'assets' o 'img' en la raíz del proyecto de GitHub Pages
-        // y luego referenciarla así: 'assets/motozorro.png' o './imagenes/motozorro.png'
-        // Si la carpeta 'imagenes' está al mismo nivel que tu archivo HTML, './imagenes/' es correcto.
-
-        const motoFoxImg = new Image();
-        motoFoxImg.src = './imagenes/motozorro.png'; // Asegúrate que esta ruta sea correcta en GitHub
-
-        const pipeTopImg = new Image();
-        pipeTopImg.src = './imagenes/tuberia_arriba.svg'; // Los SVG son geniales para escalar
-
-        const pipeBottomImg = new Image();
-        pipeBottomImg.src = './imagenes/tuberia_abajo.svg';
-
-        const groundImg = new Image();
-        groundImg.src = './imagenes/suelo.svg';
-
-        const bgImg = new Image();
-        bgImg.src = './imagenes/fondo_juego.svg';
-
-        const zorroVictoriaImg = new Image();
-        zorroVictoriaImg.src = './imagenes/zorro_victoria.jpg';
-
-        const dancingFoxImg = new Image(); // GIF del zorro bailando (Base64 para evitar problemas de ruta)
-        dancingFoxImg.src = 'data:image/gif;base64,R0lGODlhIAAgAPIEAAAAAP/OAAAA/84A////AAAAACH/C05FVFNDQVBFMi4wAwEAAAAh+QQJFAACACwAAAAAIAAgAAADXei63P4wykmrvTjrzbv/YCiOZGmeaKqubOu+cCzPdG3feK7vfO//wKBwSCwaj8ikcslsOp/QqHRKrVqv2Kx2y+16v+CweEwum8/otHrNbrvf8Lh8Tq/b7/i8fs/v+/+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChooqMhR0AAAAh+QQJFAACACwEAAIAFwAWAAADQHi63P4wykmrvTjrzbv/YCiOZGmeaKqubOu+cCzPdG3feK7vfO//wKAwSBQeiEghlHMpyfE0pFQrjVLjB+xOq3f0mJxbM9oVAAA7';
-
+        const motoFoxImg = new Image(); motoFoxImg.src = './imagenes/motozorro.png';
+        const pipeTopImg = new Image(); pipeTopImg.src = './imagenes/tuberia_arriba.svg';
+        const pipeBottomImg = new Image(); pipeBottomImg.src = './imagenes/tuberia_abajo.svg';
+        const groundImg = new Image(); groundImg.src = './imagenes/suelo.svg';
+        const bgImg = new Image(); bgImg.src = './imagenes/fondo_juego.svg';
+        const zorroVictoriaImg = new Image(); zorroVictoriaImg.src = './imagenes/zorro_victoria.jpg';
+        const dancingFoxImg = new Image(); dancingFoxImg.src = 'data:image/gif;base64,R0lGODlhIAAgAPIEAAAAAP/OAAAA/84A////AAAAACH/C05FVFNDQVBFMi4wAwEAAAAh+QQJFAACACwAAAAAIAAgAAADXei63P4wykmrvTjrzbv/YCiOZGmeaKqubOu+cCzPdG3feK7vfO//wKBwSCwaj8ikcslsOp/QqHRKrVqv2Kx2y+16v+CweEwum8/otHrNbrvf8Lh8Tq/b7/i8fs/v+/+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChooqMhR0AAAAh+QQJFAACACwEAAIAFwAWAAADQHi63P4wykmrvTjrzbv/YCiOZGmeaKqubOu+cCzPdG3feK7vfO//wKAwSBQeiEghlHMpyfE0pFQrjVLjB+xOq3f0mJxbM9oVAAA7';
 
         // --- Variables del Juego ---
-        let motoX, motoY, motoVelocity, motoSize; // Propiedades del jugador (moto-zorro)
-        let gravity; // Fuerza de gravedad
-        let pipes; // Array para almacenar las tuberías
-        let pipeWidth, pipeGap, pipeSpeed; // Propiedades de las tuberías
-        let score; // Puntuación del jugador
-        let frames; // Contador de frames (útil para temporizar eventos)
-        let gameState; // Estado actual del juego ('READY', 'PLAYING', 'GAMEOVER', etc.)
-        let isPaused = false; // Indicador de si el juego está pausado
-        let groundHeight = 50; // Altura del suelo
-        let groundX = 0; // Posición X del suelo (para efecto de scroll)
+        let motoX, motoY, motoVelocity, motoSize;
+        let gravity;
+        let pipes;
+        let pipeWidth, pipeGap, pipeSpeed;
+        let score;
+        let frames;
+        let gameState;
+        let isPaused = false;
+        let groundHeight = 50;
+        let groundX = 0;
+        const scoreMetaInicial = 10; 
+        let victoriaAlcanzada = false;
 
-        const scoreMetaInicial = 10; // Puntuación para la victoria intermedia
-        let victoriaAlcanzada = false; // Flag para controlar si ya se mostró la pantalla de victoria intermedia
+        // --- Variables para el Sistema de Preguntas ---
+        let isAnsweringQuestion = false;
+        let currentQuestionData = null;
 
-        // --- Inicialización del Juego ---
+        // --- BANCO DE PREGUNTAS ---
+        const questions = [
+            { text: "¿Cuál es el nombre del niño que tiene una cama voladora?", options: ["a) Bernardo", "b) Bartolo", "c) Benjamín"], correctAnswerIndex: 1 },
+            { text: "En la ciudad secreta de los Andes, ¿cuál es el principal problema que deben resolver Bartolo y sus nuevos amigos?", options: ["a) Una inundación que amenaza la ciudad.", "b) Un meteorito que ha tapado el cráter por donde sale el sol.", "c) La desaparición del libro de hechizos de la ciudad."], correctAnswerIndex: 1 },
+            { text: "¿Cuál de estos animales NO es un personaje que Bartolo conoce en la ciudad secreta?", options: ["a) Pascual, el conejo.", "b) Valentín, el puma.", "c) Lorenzo, el loro."], correctAnswerIndex: 2 },
+            { text: "¿Qué personaje ayuda a Bartolo y los animales a llegar al fondo del lago para buscar una solución al problema del meteorito?", options: ["a) Un cóndor gigante.", "b) Sofía, la niña, con un submarino especial.", "c) Un antiguo mapa encontrado en la biblioteca de la ciudad."], correctAnswerIndex: 1 },
+            { text: "¿Qué utilizan finalmente para mover el meteorito que tapa el sol?", options: ["a) La fuerza combinada de todos los animales de la ciudad.", "b) Una erupción volcánica controlada.", "c) La propia cama mágica de Bartolo, usada de una forma ingeniosa."], correctAnswerIndex: 2 },
+            { text: "¿Qué característica especial tiene la ciudad secreta en la cordillera, además de ser habitada por animales que hablan?", options: ["a) Los edificios están hechos de nubes.", "b) Dependen de un sol que sale por un cráter específico.", "c) Cambia de ubicación cada noche para no ser descubierta."], correctAnswerIndex: 1 },
+            { text: "¿Cuál es uno de los mensajes o temas principales que se pueden extraer del libro \"La cama mágica de Bartolo\"?", options: ["a) La importancia de la tecnología sobre la naturaleza.", "b) La desconfianza hacia los extraños.", "c) El valor de la amistad, la colaboración y la creatividad para resolver problemas."], correctAnswerIndex: 2 },
+            { text: "Al final de la aventura en la cordillera, ¿cómo regresa Bartolo a su hogar?", options: ["a) Los animales construyen una catapulta gigante.", "b) Su cama lo lleva de vuelta, aunque de una manera un tanto accidentada y veloz.", "c) Sofía lo acompaña en un avión especial."], correctAnswerIndex: 1 },
+            { text: "¿Quién es Sofía en la historia?", options: ["a) La hermana de Bartolo que lo espera en casa.", "b) Una estrella que guía a Bartolo en su viaje.", "c) Una niña aventurera que vive en la ciudad secreta y ayuda a resolver el problema del sol."], correctAnswerIndex: 2 },
+            { text: "¿Qué actitud o cualidad de Bartolo es fundamental para enfrentar los desafíos en la ciudad secreta?", options: ["a) Su escepticismo y cautela ante lo desconocido.", "b) Su ingenio y disposición a escuchar y valorar las ideas de los demás.", "c) Su fuerza física superior a la de los animales."], correctAnswerIndex: 1 }
+        ];
+        let availableQuestions = [];
+        const questionMilestones = [3, 6, 11, 17, 20]; // Hitos específicos para preguntas
+        let milestonesReached = []; // Rastrea los hitos específicos ya usados
+        let lastScoreThatTriggeredQuestion = 0; // Evita re-disparos en el mismo score
+
         function init() {
-            motoSize = 40; // Tamaño del zorro en la moto
-            motoX = 60; // Posición X inicial
-            motoY = canvas.height / 2 - motoSize / 2; // Posición Y inicial (centrado verticalmente)
-            motoVelocity = 0; // Velocidad vertical inicial
-            gravity = 0.05; // Gravedad MUY BAJA para modo fácil
+            motoSize = 40; motoX = 60; motoY = canvas.height / 2 - motoSize / 2;
+            motoVelocity = 0; gravity = 0.05;
+            pipes = []; pipeWidth = 64; pipeGap = 220; pipeSpeed = 0.8;
+            score = 0; frames = 0;
+            gameState = 'READY';
+            isPaused = false; victoriaAlcanzada = false;
+            isAnsweringQuestion = false; questionModal.style.display = 'none';
+            
+            availableQuestions = [...questions]; // Copia fresca de preguntas
+            milestonesReached = []; // Reinicia hitos alcanzados
+            lastScoreThatTriggeredQuestion = 0; // Reinicia el tracker
 
-            pipes = []; // Reinicia el array de tuberías
-            pipeWidth = 64; // Ancho de las tuberías
-            pipeGap = 220; // Espacio MUY GRANDE entre tuberías para modo fácil
-            pipeSpeed = 0.8; // Velocidad MUY LENTA de las tuberías para modo fácil
-
-            score = 0; // Reinicia la puntuación
-            frames = 0; // Reinicia el contador de frames
-            gameState = 'READY'; // Estado inicial del juego
-            isPaused = false; // El juego no está pausado al inicio
-            victoriaAlcanzada = false; // Reinicia el flag de victoria
-            updatePauseButtonIcon(); // Actualiza el ícono del botón de pausa
-
-            scoreDisplay.textContent = score; // Muestra la puntuación inicial
-            messageDisplay.innerHTML = 'Pulsa o haz clic<br>para Empezar la Aventura'; // Mensaje inicial
-            messageDisplay.style.display = 'block'; // Muestra el mensaje
-            messageDisplay.style.top = '40%'; // Posición del mensaje
+            updatePauseButtonIcon();
+            scoreDisplay.textContent = score;
+            messageDisplay.innerHTML = 'Pulsa o haz clic<br>para Empezar la Aventura';
+            messageDisplay.style.display = 'block';
+            messageDisplay.style.top = '40%';
+            pauseButton.style.display = 'flex';
         }
 
-        // --- Funciones de Dibujo ---
         function drawMoto() {
-            ctx.save(); // Guarda el estado actual del contexto (transformaciones, estilos)
-            ctx.translate(motoX + motoSize / 2, motoY + motoSize / 2); // Mueve el origen al centro de la moto para rotar
-            
-            // Calcula el ángulo de rotación basado en la velocidad vertical (efecto visual)
-            let angle = Math.min(Math.PI / 8, motoVelocity * 0.08); // Limita la inclinación
-            ctx.rotate(angle);
-
-            // Dibuja la imagen del moto-zorro si está cargada, sino un rectángulo naranja
+            ctx.save();
+            ctx.translate(motoX + motoSize / 2, motoY + motoSize / 2);
+            let angle = Math.min(Math.PI / 8, motoVelocity * 0.08); ctx.rotate(angle);
             if (motoFoxImg.complete && motoFoxImg.naturalWidth !== 0) {
                 ctx.drawImage(motoFoxImg, -motoSize / 2, -motoSize / 2, motoSize, motoSize);
-            } else {
-                // Fallback si la imagen no carga
-                ctx.fillStyle = 'orange';
-                ctx.fillRect(-motoSize / 2, -motoSize / 2, motoSize, motoSize);
-            }
-            ctx.restore(); // Restaura el estado previo del contexto
+            } else { ctx.fillStyle = 'orange'; ctx.fillRect(-motoSize / 2, -motoSize / 2, motoSize, motoSize); }
+            ctx.restore();
         }
 
         function drawPipes() {
             pipes.forEach(pipe => {
-                // Dibuja la tubería superior si la imagen está cargada
                 if (pipeTopImg.complete && pipeTopImg.naturalWidth !== 0) {
                     ctx.drawImage(pipeTopImg, pipe.x, 0, pipeWidth, pipe.topHeight);
-                } else {
-                    // Fallback si la imagen no carga
-                    ctx.fillStyle = 'green';
-                    ctx.fillRect(pipe.x, 0, pipeWidth, pipe.topHeight);
-                }
-                // Dibuja la tubería inferior si la imagen está cargada
+                } else { ctx.fillStyle = 'green'; ctx.fillRect(pipe.x, 0, pipeWidth, pipe.topHeight); }
                 if (pipeBottomImg.complete && pipeBottomImg.naturalWidth !== 0) {
                     ctx.drawImage(pipeBottomImg, pipe.x, pipe.topHeight + pipeGap, pipeWidth, canvas.height - pipe.topHeight - pipeGap - groundHeight);
-                } else {
-                    // Fallback si la imagen no carga
-                    ctx.fillStyle = 'green';
-                    ctx.fillRect(pipe.x, pipe.topHeight + pipeGap, pipeWidth, canvas.height - pipe.topHeight - pipeGap - groundHeight);
-                }
+                } else { ctx.fillStyle = 'green'; ctx.fillRect(pipe.x, pipe.topHeight + pipeGap, pipeWidth, canvas.height - pipe.topHeight - pipeGap - groundHeight); }
             });
         }
 
         function drawGround() {
-            // Dibuja el suelo repetidamente para crear efecto de scroll infinito
             if (groundImg.complete && groundImg.naturalWidth !== 0 && groundImg.width > 0) {
                  for (let i = 0; (i * groundImg.width) + groundX < canvas.width + groundImg.width; i++) {
                     ctx.drawImage(groundImg, (i * groundImg.width) + groundX, canvas.height - groundHeight, groundImg.width, groundHeight);
                 }
-            } else {
-                // Fallback si la imagen no carga
-                ctx.fillStyle = '#d2b48c'; // Color tierra
-                ctx.fillRect(0, canvas.height - groundHeight, canvas.width, groundHeight);
-            }
+            } else { ctx.fillStyle = '#d2b48c'; ctx.fillRect(0, canvas.height - groundHeight, canvas.width, groundHeight); }
         }
 
         function drawBackground() {
-            // Dibuja el fondo repetidamente para crear efecto de scroll infinito (parallax)
             if (bgImg.complete && bgImg.naturalWidth !== 0 && bgImg.width > 0) {
-                 for (let i = 0; (i * bgImg.width) + (groundX * 0.5) < canvas.width + bgImg.width; i++) { // groundX * 0.5 para efecto parallax
+                 for (let i = 0; (i * bgImg.width) + (groundX * 0.5) < canvas.width + bgImg.width; i++) {
                     let bgX = (i * bgImg.width) + (groundX * 0.5);
-                    // Reposiciona el fondo si se sale completamente a la izquierda
-                    while (bgX <= -bgImg.width && bgImg.width > 0) {
-                        bgX += bgImg.width;
-                    }
+                    while (bgX <= -bgImg.width && bgImg.width > 0) { bgX += bgImg.width; }
                     ctx.drawImage(bgImg, bgX , 0, bgImg.width, canvas.height - groundHeight);
                 }
-            } else {
-                // Fallback si la imagen no carga (el body ya tiene un color de fondo)
-                // Podrías dibujar un gradiente o algo simple aquí si quieres
             }
         }
 
-        // --- Funciones de Actualización (Lógica del Juego) ---
         function updateMoto() {
-            motoVelocity += gravity; // Aplica gravedad
-            motoY += motoVelocity; // Mueve la moto verticalmente
-
-            // Evita que la moto suba demasiado (con un pequeño margen)
-            if (motoY < -motoSize * 0.2) {
-                motoY = -motoSize * 0.2;
-                motoVelocity = gravity * 2; // Empieza a caer suavemente
-            }
-
-            // Colisión con el suelo (solo previene que se hunda, gameOver lo maneja la colisión con tuberías o el suelo en `checkCollisions`)
-            if (motoY + motoSize > canvas.height - groundHeight) {
-                motoY = canvas.height - groundHeight - motoSize;
-                // Si quieres que tocar el suelo sea game over, llama a gameOver() aquí
-                // Por ahora, se maneja en checkCollisions para consistencia
-            }
+            motoVelocity += gravity; motoY += motoVelocity;
+            if (motoY < -motoSize * 0.2) { motoY = -motoSize * 0.2; motoVelocity = gravity * 2; }
         }
 
         function updatePipes() {
-            // Añade nuevas tuberías cada cierto número de frames (controla la frecuencia)
-            if (frames % 200 === 0) { // Tuberías MUY POCO frecuentes para modo fácil
-                let minTopHeight = 80; // Altura mínima de la tubería superior
-                let maxTopHeightPossible = canvas.height - groundHeight - pipeGap - 80; // Deja espacio para tubería inferior
-
+            if (frames % 200 === 0) {
+                let minTopHeight = 80;
+                let maxTopHeightPossible = canvas.height - groundHeight - pipeGap - 80;
                 let topHeight = Math.random() * (maxTopHeightPossible - minTopHeight) + minTopHeight;
-
                 pipes.push({ x: canvas.width, topHeight: topHeight, passed: false });
             }
 
             pipes.forEach(pipe => {
-                pipe.x -= pipeSpeed; // Mueve las tuberías hacia la izquierda
+                pipe.x -= pipeSpeed;
+                if (pipe.x + pipeWidth < 0) { pipes.shift(); }
 
-                // Elimina las tuberías que ya salieron de la pantalla
-                if (pipe.x + pipeWidth < 0) {
-                    pipes.shift(); // Quita el primer elemento del array (el más antiguo)
-                }
-
-                // Incrementa el score si la moto pasa una tubería
                 if (!pipe.passed && pipe.x + pipeWidth < motoX) {
                     pipe.passed = true;
                     score++;
                     scoreDisplay.textContent = score;
 
-                    // Comprueba si se alcanzó la meta para la victoria intermedia
-                    if (score === scoreMetaInicial && !victoriaAlcanzada) {
-                        mostrarPantallaVictoriaIntermedia();
-                    } else if (score === 9999 && gameState !== 'ENDING') { // Límite de puntuación para el final
-                        enterEndingSequence();
+                    let questionShouldBeTriggered = false;
+                    
+                    // 1. Verificar hitos específicos no alcanzados
+                    for (let i = 0; i < questionMilestones.length; i++) {
+                        const milestone = questionMilestones[i];
+                        if (score === milestone && !milestonesReached.includes(milestone)) {
+                            questionShouldBeTriggered = true;
+                            milestonesReached.push(milestone); // Marcar hito como usado
+                            break; 
+                        }
+                    }
+
+                    // 2. Verificar múltiplos de 5 después de 20 (si no se activó por hito)
+                    if (!questionShouldBeTriggered && score > 20 && score % 5 === 0) {
+                        // Evitar re-trigger si este score ya activó una pregunta (como hito o múltiplo anterior)
+                        if (!milestonesReached.includes(score) && score !== lastScoreThatTriggeredQuestion) {
+                            questionShouldBeTriggered = true;
+                        }
+                    }
+                    
+                    if (questionShouldBeTriggered) {
+                        if (!isAnsweringQuestion && gameState === 'PLAYING') {
+                            triggerQuestion();
+                            lastScoreThatTriggeredQuestion = score; // Registrar que este score disparó una pregunta
+                        }
+                    }
+
+                    // Lógica de victoria (solo si no hay pregunta activa)
+                    if (!isAnsweringQuestion) {
+                        if (score === scoreMetaInicial && !victoriaAlcanzada) {
+                            mostrarPantallaVictoriaIntermedia();
+                        } else if (score === 9999 && gameState !== 'ENDING') {
+                            enterEndingSequence();
+                        }
                     }
                 }
             });
         }
-        
+
         function checkCollisions() {
-            if (gameState !== 'PLAYING') return; // Solo chequear colisiones si se está jugando
-
-            // Colisión con el suelo
+            if (gameState !== 'PLAYING' || isAnsweringQuestion) return;
             if (motoY + motoSize > canvas.height - groundHeight) {
-                motoY = canvas.height - groundHeight - motoSize; // Asegura que no se hunda
-                gameOver();
-                return; // Termina la función si hay colisión con el suelo
+                motoY = canvas.height - groundHeight - motoSize;
+                gameOver("¡Caíste al suelo!"); return;
             }
-
-            // Colisión con las tuberías
             for (let pipe of pipes) {
-                const colisionMargen = 2; // Pequeño margen para no ser tan estricto
-                if (motoX + motoSize - colisionMargen > pipe.x &&        // El lado derecho de la moto supera el lado izq de la tubería
-                    motoX + colisionMargen < pipe.x + pipeWidth &&       // El lado izq de la moto está antes del lado der de la tubería
-                    (motoY + colisionMargen < pipe.topHeight ||          // La parte superior de la moto toca la tubería de arriba
-                     motoY + motoSize - colisionMargen > pipe.topHeight + pipeGap)) { // La parte inferior de la moto toca la tubería de abajo
-                    gameOver();
-                    return; // Termina la función si hay colisión con una tubería
+                const m = 2; // margen
+                if (motoX + motoSize - m > pipe.x && motoX + m < pipe.x + pipeWidth &&
+                    (motoY + m < pipe.topHeight || motoY + motoSize - m > pipe.topHeight + pipeGap)) {
+                    gameOver("¡Chocaste con una tubería!"); return;
                 }
             }
         }
-
 
         function updateGround() {
-            groundX -= pipeSpeed; // Mueve el suelo a la misma velocidad que las tuberías
-            // Reposiciona el suelo para el efecto de scroll infinito
+            groundX -= pipeSpeed;
             if (groundImg.complete && groundImg.naturalWidth !== 0 && groundImg.width > 0) {
-                if (groundX <= -groundImg.width) {
-                    groundX += groundImg.width;
-                }
-            } else if (groundImg.width === 0 && groundImg.complete) { // Si la imagen cargó pero no tiene ancho (ej. SVG vacío)
-                 // No hacer nada o usar un groundX = 0; para evitar bucles infinitos si se usa groundImg.width en la condición del bucle
+                if (groundX <= -groundImg.width) { groundX += groundImg.width; }
             }
         }
 
-        // --- Acciones del Jugador ---
         function flap() {
-            if (gameState === 'PLAYING' && !isPaused) { // Solo permite saltar si está jugando y no pausado
-                motoVelocity = -2.8; // Salto MUY SUAVE para modo fácil
+            if (gameState === 'PLAYING' && !isPaused && !isAnsweringQuestion) {
+                motoVelocity = -2.8;
             }
         }
 
-        // --- Estados del Juego ---
-        function gameOver() {
-            // Evita múltiples llamadas a gameOver o si ya está en una secuencia final/victoria
+        function gameOver(reason = "¡Oh no, Zorro!") {
             if (gameState === 'GAMEOVER' || gameState === 'ENDING' || gameState === 'VICTORY_INTERMEDIATE') return;
-            
-            gameState = 'GAMEOVER';
-            messageDisplay.innerHTML = `¡Oh no, Zorro!<br>Puntuación: ${score}<br><small>Pulsa para reintentar</small>`;
-            messageDisplay.style.top = '40%'; // Ajusta la posición si es necesario
-            messageDisplay.style.display = 'block';
-            // Aquí podrías añadir un sonido de "game over"
-        }
-
-        function mostrarPantallaVictoriaIntermedia() {
-            if (gameState === 'ENDING') return; // No mostrar si ya está en la secuencia final
-
-            isPaused = true; // Pausa el juego lógicamente
-            victoriaAlcanzada = true;
-            gameState = 'VICTORY_INTERMEDIATE';
-            updatePauseButtonIcon(); // Actualiza el botón (aunque podría ocultarse o deshabilitarse)
-
-            // Limpia el canvas para dibujar la pantalla de victoria
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Dibuja el fondo si está disponible
-            if (bgImg.complete && bgImg.naturalWidth !== 0 && bgImg.width > 0) {
-                // Dibuja una versión estática del fondo (sin scroll)
-                let tempGroundX = 0; // O la posición actual si quieres que coincida
-                for (let i = 0; (i * bgImg.width) + (tempGroundX * 0.5) < canvas.width + bgImg.width; i++) {
-                    let bgX = (i * bgImg.width) + (tempGroundX * 0.5);
-                    while (bgX <= -bgImg.width && bgImg.width > 0) { bgX += bgImg.width; }
-                    ctx.drawImage(bgImg, bgX , 0, bgImg.width, canvas.height - groundHeight);
-                }
-            } else {
-                // Fallback de fondo si la imagen no cargó
-                ctx.fillStyle = '#70c5ce'; // Color cielo
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-            }
-            
-            // Dibuja el suelo estático
-            drawGroundStatic();
-
-
-            // Muestra la imagen de victoria del zorro
-            if (zorroVictoriaImg.complete && zorroVictoriaImg.naturalWidth !== 0) {
-                const imgWidth = zorroVictoriaImg.naturalWidth;
-                const imgHeight = zorroVictoriaImg.naturalHeight;
-                // Ajusta el tamaño de la imagen para que quepa bien
-                let drawWidth = canvas.width * 0.9;
-                let drawHeight = (imgHeight / imgWidth) * drawWidth;
-
-                if (drawHeight > canvas.height * 0.6) {
-                    drawHeight = canvas.height * 0.6;
-                    drawWidth = (imgWidth / imgHeight) * drawHeight;
-                }
-                if (drawWidth > canvas.width * 0.9) { // Doble chequeo por si acaso
-                    drawWidth = canvas.width * 0.9;
-                    drawHeight = (imgHeight / imgWidth) * drawWidth;
-                }
-
-                const posX = (canvas.width - drawWidth) / 2; // Centra la imagen
-                const posY = (canvas.height - drawHeight) / 4; // Posición Y
-
-                ctx.drawImage(zorroVictoriaImg, posX, posY, drawWidth, drawHeight);
-                messageDisplay.innerHTML = `¡Lo lograron!<br>"¡Vamos a conseguir la hazaña de salvar al mundo!"<br><small>Pulsa para continuar la aventura</small>`;
-            } else {
-                // Fallback si la imagen de victoria no carga
-                messageDisplay.innerHTML = `¡FELICIDADES!<br>Alcanzaste ${scoreMetaInicial} puntos.<br><small>Pulsa para continuar</small>`;
-            }
-            messageDisplay.style.top = '75%'; // Más abajo para no tapar la imagen
-            messageDisplay.style.display = 'block';
-            scoreDisplay.textContent = score; // Mantiene el score visible
+            gameState = 'GAMEOVER'; isPaused = true;
+            messageDisplay.innerHTML = `${reason}<br>Puntuación Final: ${score}<br><small>Pulsa para reintentar</small>`;
+            messageDisplay.style.top = '40%'; messageDisplay.style.display = 'block';
+            questionModal.style.display = 'none';
         }
         
-        function drawGroundStatic() { // Función para dibujar el suelo sin scroll para pantallas de victoria/final
+        function mostrarPantallaVictoriaIntermedia() {
+            if (gameState === 'ENDING' || isAnsweringQuestion) return;
+            isPaused = true; victoriaAlcanzada = true; gameState = 'VICTORY_INTERMEDIATE';
+            updatePauseButtonIcon(); ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (bgImg.complete && bgImg.naturalWidth !== 0) drawBackgroundStatic();
+            else { ctx.fillStyle = '#70c5ce'; ctx.fillRect(0, 0, canvas.width, canvas.height); }
+            drawGroundStatic();
+            if (zorroVictoriaImg.complete && zorroVictoriaImg.naturalWidth !== 0) {
+                const imgW = zorroVictoriaImg.naturalWidth, imgH = zorroVictoriaImg.naturalHeight;
+                let dW = canvas.width * 0.9, dH = (imgH / imgW) * dW;
+                if (dH > canvas.height * 0.6) { dH = canvas.height * 0.6; dW = (imgW / imgH) * dH; }
+                if (dW > canvas.width * 0.9) { dW = canvas.width * 0.9; dH = (imgH / imgW) * dW; }
+                ctx.drawImage(zorroVictoriaImg, (canvas.width - dW) / 2, (canvas.height - dH) / 4, dW, dH);
+                messageDisplay.innerHTML = `¡Lo lograron!<br>"¡Vamos a conseguir la hazaña de salvar al mundo!"<br><small>Pulsa para continuar</small>`;
+            } else { messageDisplay.innerHTML = `¡FELICIDADES!<br>Alcanzaste ${scoreMetaInicial} puntos.<br><small>Pulsa para continuar</small>`; }
+            messageDisplay.style.top = '75%'; messageDisplay.style.display = 'block';
+            scoreDisplay.textContent = score;
+        }
+
+        function drawGroundStatic() {
             if (groundImg.complete && groundImg.naturalWidth !== 0 && groundImg.width > 0) {
-                 for (let i = 0; (i * groundImg.width) < canvas.width + groundImg.width; i++) { // Sin groundX
+                 for (let i = 0; (i * groundImg.width) < canvas.width + groundImg.width; i++) {
                     ctx.drawImage(groundImg, (i * groundImg.width), canvas.height - groundHeight, groundImg.width, groundHeight);
                 }
-            } else {
-                ctx.fillStyle = '#d2b48c';
-                ctx.fillRect(0, canvas.height - groundHeight, canvas.width, groundHeight);
+            } else { ctx.fillStyle = '#d2b48c'; ctx.fillRect(0, canvas.height - groundHeight, canvas.width, groundHeight); }
+        }
+        function drawBackgroundStatic() {
+            if (bgImg.complete && bgImg.naturalWidth !== 0 && bgImg.width > 0) {
+                 for (let i = 0; (i * bgImg.width) < canvas.width + bgImg.width; i++) {
+                    ctx.drawImage(bgImg, (i * bgImg.width) , 0, bgImg.width, canvas.height - groundHeight);
+                }
             }
         }
 
-
         function enterEndingSequence() {
-            gameState = 'ENDING';
-            pipes = []; // Limpia las tuberías
-            // Coloca al zorro en una posición para la secuencia final
-            motoX = canvas.width / 2 - motoSize / 2;
-            motoY = canvas.height - groundHeight - motoSize - 10; // Sobre el suelo
-            motoVelocity = 0; // Sin movimiento vertical
-
-            messageDisplay.innerHTML = `¡FIN DE LA AVENTURA!`;
-            messageDisplay.style.top = '30%';
-            messageDisplay.style.display = 'block';
-            pauseButton.style.display = 'none'; // Oculta el botón de pausa
+            gameState = 'ENDING'; pipes = [];
+            motoX = canvas.width / 2 - motoSize / 2; motoY = canvas.height - groundHeight - motoSize - 10;
+            motoVelocity = 0; messageDisplay.innerHTML = `¡FIN DE LA AVENTURA!`;
+            messageDisplay.style.top = '30%'; messageDisplay.style.display = 'block';
+            pauseButton.style.display = 'none';
         }
 
         function drawEndingSequence() {
-            // Fondo oscuro para la escena final
-            ctx.fillStyle = '#303030';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Suelo de "discoteca" (ejemplo)
+            ctx.fillStyle = '#303030'; ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.fillStyle = '#505050';
-            for(let y = 0; y < canvas.height; y += 20) {
-                for(let x = (y/20)%2 === 0 ? 0 : -10; x < canvas.width; x += 40) {
-                    ctx.fillRect(x, y, 38, 18); // Pequeños rectángulos
-                }
-            }
-            // Plataforma para el zorro
-            ctx.fillStyle = '#404040';
-            ctx.fillRect(0, canvas.height - groundHeight + 10, canvas.width, groundHeight - 10);
-
-            // Dibuja al zorro bailando si la imagen (GIF) está cargada
-            const dancingFoxSize = 64;
+            for(let y=0; y<canvas.height; y+=20) for(let x=(y/20)%2===0?0:-10; x<canvas.width; x+=40) ctx.fillRect(x,y,38,18);
+            ctx.fillStyle = '#404040'; ctx.fillRect(0, canvas.height - groundHeight + 10, canvas.width, groundHeight-10);
+            const dFS = 64; // dancingFoxSize
             if (dancingFoxImg.complete && dancingFoxImg.naturalWidth !== 0) {
-                 ctx.drawImage(dancingFoxImg,
-                    canvas.width/2 - dancingFoxSize/2, // Centrado
-                    canvas.height - groundHeight - dancingFoxSize + 10, // Sobre la plataforma
-                    dancingFoxSize,
-                    dancingFoxSize
-                );
-            } else {
-                // Fallback si el GIF no carga: un zorro naranja simple
-                ctx.fillStyle = 'orange';
-                ctx.fillRect(
-                    canvas.width/2 - motoSize/2,
-                    canvas.height - groundHeight - motoSize + 10,
-                    motoSize,
-                    motoSize);
-            }
-
-            // Decoraciones (ej. luces de discoteca)
-            ctx.fillStyle = 'orange';
-            ctx.fillRect(canvas.width * 0.2 - 5, canvas.height * 0.6 - 10, 10, 20); // Poste
-            ctx.fillStyle = 'red';
-            ctx.beginPath();
-            ctx.arc(canvas.width * 0.2, canvas.height * 0.6 - 15, 7, 0, Math.PI * 2); // Luz
-            ctx.fill();
-
-            ctx.fillStyle = 'orange';
-            ctx.fillRect(canvas.width * 0.8 - 5, canvas.height * 0.6 - 10, 10, 20); // Poste
-            ctx.fillStyle = 'red';
-            ctx.beginPath();
-            ctx.arc(canvas.width * 0.8, canvas.height * 0.6 - 15, 7, 0, Math.PI * 2); // Luz
-            ctx.fill();
-
-            scoreDisplay.textContent = '9999'; // Puntuación final
+                 ctx.drawImage(dancingFoxImg, canvas.width/2 - dFS/2, canvas.height - groundHeight - dFS + 10, dFS, dFS);
+            } else { ctx.fillStyle = 'orange'; ctx.fillRect(canvas.width/2 - motoSize/2, canvas.height - groundHeight - motoSize + 10, motoSize, motoSize); }
+            ctx.fillStyle='orange'; ctx.fillRect(canvas.width*0.2-5,canvas.height*0.6-10,10,20); ctx.fillStyle='red'; ctx.beginPath(); ctx.arc(canvas.width*0.2,canvas.height*0.6-15,7,0,Math.PI*2); ctx.fill();
+            ctx.fillStyle='orange'; ctx.fillRect(canvas.width*0.8-5,canvas.height*0.6-10,10,20); ctx.fillStyle='red'; ctx.beginPath(); ctx.arc(canvas.width*0.8,canvas.height*0.6-15,7,0,Math.PI*2); ctx.fill();
+            scoreDisplay.textContent = '9999';
         }
 
-        // --- Bucle Principal del Juego ---
-        function gameLoop() {
-            if (!isPaused || gameState === 'VICTORY_INTERMEDIATE') { // Permitir redibujar en victoria intermedia aunque esté "pausado"
-                ctx.clearRect(0, 0, canvas.width, canvas.height); // Limpia el canvas en cada frame
+        function triggerQuestion() {
+            if (availableQuestions.length === 0) {
+                console.log("No hay más preguntas disponibles.");
+                // Opcional: reiniciar availableQuestions = [...questions]; si se quiere repetir.
+                // Por ahora, si se acaban, no se hacen más preguntas.
+                isPaused = false; // Asegurar que el juego no quede pausado si no hay pregunta
+                updatePauseButtonIcon();
+                return; 
+            }
+            if (isAnsweringQuestion || gameState !== 'PLAYING') return;
 
-                if (gameState === 'ENDING') {
-                    drawEndingSequence();
-                } else if (gameState === 'VICTORY_INTERMEDIATE') {
-                    // La pantalla de victoria se dibuja principalmente en mostrarPantallaVictoriaIntermedia()
-                    // Aquí solo se asegura que se mantenga visible si es necesario redibujar
-                    // (por ejemplo, si hubiera animaciones en esta pantalla)
-                    // Re-dibujar fondo y zorro de victoria
-                    if (bgImg.complete && bgImg.naturalWidth !== 0) {
-                         let tempGroundX = 0; 
-                         for (let i = 0; (i * bgImg.width) + (tempGroundX * 0.5) < canvas.width + bgImg.width; i++) {
-                            let bgX = (i * bgImg.width) + (tempGroundX * 0.5);
-                            while (bgX <= -bgImg.width && bgImg.width > 0) { bgX += bgImg.width; }
-                            ctx.drawImage(bgImg, bgX , 0, bgImg.width, canvas.height - groundHeight);
-                        }
-                    } else {
-                        ctx.fillStyle = '#70c5ce';
-                        ctx.fillRect(0, 0, canvas.width, canvas.height);
-                    }
+            isAnsweringQuestion = true; isPaused = true;
+            updatePauseButtonIcon();
+
+            const questionIndex = Math.floor(Math.random() * availableQuestions.length);
+            currentQuestionData = availableQuestions.splice(questionIndex, 1)[0];
+
+            questionText.textContent = currentQuestionData.text;
+            answerButtonsContainer.innerHTML = ''; 
+
+            currentQuestionData.options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.onclick = () => selectAnswer(index);
+                answerButtonsContainer.appendChild(button);
+            });
+            questionModal.style.display = 'flex';
+        }
+
+        function selectAnswer(selectedIndex) {
+            if (!currentQuestionData) return;
+
+            if (selectedIndex === currentQuestionData.correctAnswerIndex) {
+                score -= 5; 
+                if (score < 0) score = 0; 
+                scoreDisplay.textContent = score;
+                // No es necesario actualizar lastScoreThatTriggeredQuestion aquí, ya se hizo al disparar.
+                messageDisplay.innerHTML = "¡Correcto! Pierdes 5 puntos.<br>Continúa la aventura.";
+                messageDisplay.style.display = 'block';
+                setTimeout(() => {
+                    messageDisplay.style.display = 'none';
+                    isAnsweringQuestion = false; isPaused = false;
+                    updatePauseButtonIcon(); questionModal.style.display = 'none';
+                }, 2000); // Un poco más de tiempo para leer el mensaje
+            } else {
+                questionModal.style.display = 'none';
+                gameOver("¡Respuesta incorrecta!");
+            }
+            currentQuestionData = null;
+        }
+
+        function gameLoop() {
+            if (!isPaused || gameState === 'VICTORY_INTERMEDIATE') {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                if (gameState === 'ENDING') { drawEndingSequence(); }
+                else if (gameState === 'VICTORY_INTERMEDIATE') {
+                    if (bgImg.complete && bgImg.naturalWidth !== 0) drawBackgroundStatic();
+                    else { ctx.fillStyle = '#70c5ce'; ctx.fillRect(0, 0, canvas.width, canvas.height); }
                     drawGroundStatic();
                     if (zorroVictoriaImg.complete && zorroVictoriaImg.naturalWidth !== 0) {
-                        const imgWidth = zorroVictoriaImg.naturalWidth;
-                        const imgHeight = zorroVictoriaImg.naturalHeight;
-                        let drawWidth = canvas.width * 0.9;
-                        let drawHeight = (imgHeight / imgWidth) * drawWidth;
-                        if (drawHeight > canvas.height * 0.6) { drawHeight = canvas.height * 0.6; drawWidth = (imgWidth / imgHeight) * drawHeight; }
-                        if (drawWidth > canvas.width * 0.9) { drawWidth = canvas.width * 0.9; drawHeight = (imgHeight / imgWidth) * drawWidth; }
-                        const posX = (canvas.width - drawWidth) / 2;
-                        const posY = (canvas.height - drawHeight) / 4;
-                        ctx.drawImage(zorroVictoriaImg, posX, posY, drawWidth, drawHeight);
+                        const imgW=zorroVictoriaImg.naturalWidth, imgH=zorroVictoriaImg.naturalHeight;
+                        let dW=canvas.width*0.9,dH=(imgH/imgW)*dW;
+                        if(dH > canvas.height*0.6){dH=canvas.height*0.6;dW=(imgW/imgH)*dH;}
+                        if(dW > canvas.width*0.9){dW=canvas.width*0.9;dH=(imgH/imgW)*dW;}
+                        ctx.drawImage(zorroVictoriaImg,(canvas.width-dW)/2,(canvas.height-dH)/4,dW,dH);
                     }
-                } else { // Estados READY, PLAYING, PAUSED, GAMEOVER (antes de reiniciar)
-                    drawBackground();
-                    drawPipes();
-                    drawGround();
-                    drawMoto();
-
-                    if (gameState === 'PLAYING' && !isPaused) { // Solo actualiza la lógica si está jugando y no pausado
-                        updateMoto();
-                        updatePipes();
-                        updateGround();
-                        checkCollisions(); // Comprueba colisiones después de actualizar posiciones
-                        frames++; // Incrementa el contador de frames
+                } else {
+                    drawBackground(); drawPipes(); drawGround(); drawMoto();
+                    if (gameState === 'PLAYING' && !isPaused && !isAnsweringQuestion) {
+                        updateMoto(); updatePipes(); updateGround(); checkCollisions(); frames++;
                     }
                 }
             }
-            requestAnimationFrame(gameLoop); // Solicita al navegador que llame a gameLoop para el próximo frame
+            requestAnimationFrame(gameLoop);
         }
 
-        // --- Manejo de Entradas (Clicks, Teclas) ---
         function handleInput() {
+            if (isAnsweringQuestion) return;
             if (gameState === 'VICTORY_INTERMEDIATE') {
-                isPaused = false; // Despausa lógicamente
-                gameState = 'PLAYING'; // Continúa el juego
-                messageDisplay.style.display = 'none'; // Oculta el mensaje de victoria
-                updatePauseButtonIcon(); // Restaura el ícono de pausa
-                // No se hace flap aquí, el juego simplemente continúa. El jugador puede hacer flap si lo desea.
-                return; // Sale de la función
+                isPaused = false; gameState = 'PLAYING';
+                messageDisplay.style.display = 'none'; updatePauseButtonIcon(); return;
             }
-
-            // Si está pausado (y no es la pantalla de victoria intermedia) o en secuencia final, no procesar saltos.
-            if (isPaused && gameState !== 'ENDING') return;
-
+            if (isPaused && gameState !== 'GAMEOVER' && gameState !== 'READY') return;
 
             if (gameState === 'READY') {
-                gameState = 'PLAYING';
-                messageDisplay.style.display = 'none'; // Oculta el mensaje de "Pulsa para empezar"
-                pauseButton.style.display = 'flex'; // Asegura que el botón de pausa sea visible
-                flap(); // Primer salto para iniciar
-            } else if (gameState === 'PLAYING') {
-                flap(); // Salto normal durante el juego
-            } else if (gameState === 'GAMEOVER' || gameState === 'ENDING') {
-                // Reinicia el juego
-                messageDisplay.style.top = '40%'; // Restaura posición del mensaje por si cambió
-                init(); // Llama a la función de inicialización
-                pauseButton.style.display = 'flex'; // Asegura que el botón de pausa sea visible al reiniciar
-            }
+                gameState = 'PLAYING'; isPaused = false;
+                messageDisplay.style.display = 'none'; pauseButton.style.display = 'flex';
+                flap();
+            } else if (gameState === 'PLAYING') { flap(); }
+            else if (gameState === 'GAMEOVER' || gameState === 'ENDING') { init(); }
         }
-
+        
         function togglePause() {
-            // Solo permite pausar/despausar si el juego está en PLAYING o ya PAUSED
-            // Y no en estados como GAMEOVER, ENDING, VICTORY_INTERMEDIATE o READY
+            if (isAnsweringQuestion || gameState === 'ENDING' || gameState === 'VICTORY_INTERMEDIATE' || gameState === 'GAMEOVER' || gameState === 'READY') return;
             if (gameState === 'PLAYING' || gameState === 'PAUSED') {
-                isPaused = !isPaused;
-                gameState = isPaused ? 'PAUSED' : 'PLAYING'; // Cambia el estado del juego
-                messageDisplay.textContent = isPaused ? 'PAUSADO' : ''; // Muestra "PAUSADO"
-                messageDisplay.style.display = isPaused ? 'block' : 'none'; // Muestra/oculta el mensaje
-                updatePauseButtonIcon(); // Cambia el ícono del botón
+                isPaused = !isPaused; gameState = isPaused ? 'PAUSED' : 'PLAYING';
+                messageDisplay.textContent = isPaused ? 'PAUSADO' : '';
+                messageDisplay.style.display = isPaused ? 'block' : 'none';
+                updatePauseButtonIcon();
             }
         }
 
         function updatePauseButtonIcon() {
-            // Cambia el ícono del botón entre pausa y play
-            if (isPaused && gameState !== 'VICTORY_INTERMEDIATE') { // No mostrar "Play" en pantalla de victoria
-                 pauseButton.innerHTML = '<div class="playIconTriangle"></div>'; // Ícono de Play
+            if (isPaused && !isAnsweringQuestion && gameState !== 'VICTORY_INTERMEDIATE') {
+                 pauseButton.innerHTML = '<div class="playIconTriangle"></div>';
             } else {
-                 pauseButton.innerHTML = '<div class="pauseIconBar"></div><div class="pauseIconBar"></div>'; // Ícono de Pausa
+                 pauseButton.innerHTML = '<div class="pauseIconBar"></div><div class="pauseIconBar"></div>';
             }
         }
 
-        // --- Event Listeners (Escuchadores de Eventos) ---
-        // Click o toque en el contenedor del juego (para saltar o iniciar/reiniciar)
         gameContainer.addEventListener('click', (event) => {
-            // Asegura que el click no sea en el botón de pausa
-            if (event.target !== pauseButton && !pauseButton.contains(event.target)) {
+            if (event.target !== pauseButton && !pauseButton.contains(event.target) &&
+                event.target !== questionModal && !questionModal.contains(event.target)) {
                 handleInput();
             }
         });
-
-        // Tecla Espacio (para saltar o iniciar/reiniciar)
         window.addEventListener('keydown', (e) => {
-            if (e.code === 'Space' || e.key === ' ') { // 'Space' es más moderno, ' ' para compatibilidad
-                e.preventDefault(); // Evita que la página haga scroll al presionar espacio
-                handleInput();
-            }
-            // Podrías añadir la tecla 'P' para pausar también, si quieres
-            // if (e.key === 'p' || e.key === 'P') {
-            //     e.preventDefault();
-            //     togglePause();
-            // }
+            if (e.code === 'Space' || e.key === ' ') { e.preventDefault(); handleInput(); }
         });
+        pauseButton.addEventListener('click', (event) => { event.stopPropagation(); togglePause(); });
 
-        // Click en el botón de pausa
-        pauseButton.addEventListener('click', (event) => {
-            event.stopPropagation(); // Evita que el click se propague al gameContainer
-            // No pausar/despausar en pantallas finales o de victoria
-            if (gameState !== 'ENDING' && gameState !== 'VICTORY_INTERMEDIATE' && gameState !== 'GAMEOVER' && gameState !== 'READY') {
-                togglePause();
-            }
-        });
-
-        // --- Carga de Assets ---
-        // Es crucial que todas las imágenes se carguen antes de iniciar el juego
-        // para evitar errores o que se muestren elementos vacíos.
-        const allAssetPaths = [
-            motoFoxImg.src, pipeTopImg.src, pipeBottomImg.src,
-            groundImg.src, bgImg.src, zorroVictoriaImg.src
-            // No incluimos dancingFoxImg.src aquí porque es base64 y se carga sincrónicamente.
-        ];
-        let assetsToLoadCount = allAssetPaths.length;
-        let assetsLoadedCount = 0;
-
-        function assetLoadedCallback(imgElement, imgPath) {
-            assetsLoadedCount++;
-            console.log(`Asset cargado: ${imgPath} (${assetsLoadedCount}/${assetsToLoadCount})`);
-            if (assetsLoadedCount === assetsToLoadCount) {
-                console.log("¡Todos los assets principales cargados! Iniciando juego...");
-                init(); // Inicializa las variables del juego
-                gameLoop(); // Comienza el bucle del juego
-            }
+        const allAssetPaths = [ motoFoxImg.src, pipeTopImg.src, pipeBottomImg.src, groundImg.src, bgImg.src, zorroVictoriaImg.src ];
+        let assetsToLoadCount = allAssetPaths.length; let assetsLoadedCount = 0;
+        function assetLoadedCallback(imgEl, imgP) {
+            assetsLoadedCount++; console.log(`Asset cargado: ${imgP} (${assetsLoadedCount}/${assetsToLoadCount})`);
+            if (assetsLoadedCount === assetsToLoadCount) { console.log("Assets cargados!"); init(); gameLoop(); }
         }
-
-        function assetErrorCallback(imgElement, imgPath) {
-            console.error(`Error al cargar la imagen: ${imgPath}. Asegúrate que el archivo exista en la ruta especificada y el nombre sea correcto (sensible a mayúsculas/minúsculas en servidores).`);
-            // Aún así contamos como "procesado" para no bloquear el inicio del juego,
-            // el juego intentará usar los fallbacks (cuadros de colores).
-            assetsLoadedCount++;
-            if (assetsLoadedCount === assetsToLoadCount) {
-                console.warn("Juego iniciado con algunos assets faltantes. Se usarán fallbacks.");
-                init();
-                gameLoop();
-            }
+        function assetErrorCallback(imgEl, imgP) {
+            console.error(`Error al cargar: ${imgP}.`); assetsLoadedCount++;
+            if (assetsLoadedCount === assetsToLoadCount) { console.warn("Juego con assets faltantes."); init(); gameLoop(); }
         }
-
-        // Asignar los manejadores onload y onerror a cada imagen
-        // Esto es más robusto que tener contadores separados para cada imagen.
-        [motoFoxImg, pipeTopImg, pipeBottomImg, groundImg, bgImg, zorroVictoriaImg].forEach(img => {
-            const path = img.src; // Guardamos el src para el log, ya que img.src puede cambiar a la URL completa
+        allAssetPaths.forEach((path, index) => {
+            const img = [motoFoxImg, pipeTopImg, pipeBottomImg, groundImg, bgImg, zorroVictoriaImg][index];
             img.onload = () => assetLoadedCallback(img, path);
             img.onerror = () => assetErrorCallback(img, path);
         });
-        
-        // Para dancingFoxImg (base64), el `onload` es casi inmediato, pero es buena práctica tenerlo
-        dancingFoxImg.onload = () => console.log("Dancing fox GIF (base64) cargado.");
-        dancingFoxImg.onerror = () => console.warn('Error al cargar dancingFoxImg (base64), la secuencia final podría no mostrarla.');
-
-
-        // NOTA IMPORTANTE PARA GITHUB PAGES:
-        // 1. Las rutas a las imágenes ('./imagenes/...') deben ser correctas RELATIVO a tu archivo HTML.
-        //    Si tu HTML está en la raíz del repositorio y las imágenes en una carpeta 'imagenes', está bien.
-        // 2. GitHub Pages es SENSIBLE A MAYÚSCULAS/MINÚSCULAS en nombres de archivo y carpetas.
-        //    Verifica que 'imagenes', 'motozorro.png', etc., coincidan EXACTAMENTE.
-        // 3. Si sigue sin verse bien, abre la consola de desarrollador de tu navegador (usualmente F12)
-        //    en la página de GitHub Pages. Busca errores en la pestaña "Consola".
-        //    Los errores 404 (Not Found) para las imágenes son los más comunes.
-
+        dancingFoxImg.onload = () => console.log("GIF cargado.");
+        dancingFoxImg.onerror = () => console.warn('Error GIF.');
     </script>
 </body>
 </html>
