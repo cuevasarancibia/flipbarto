@@ -194,10 +194,10 @@
         
         // --- Variables del Juego ---
         let motoX, motoY, motoVelocity, motoSize;
-        let gravityBase, currentGravity; // Gravedad base y la actual (puede cambiar con dificultad progresiva)
+        let gravityBase, currentGravity; 
         let pipes;
-        let pipeWidth, pipeGapFixed; // pipeGapFixed no cambiará con la dificultad 1-10
-        let pipeSpeedBase, currentPipeSpeed; // Velocidad base y la actual
+        let pipeWidth, pipeGapFixed; 
+        let pipeSpeedBase, currentPipeSpeed; 
         let score;
         let gameState = 'LOADING_ASSETS'; // Estado inicial
         let isPaused = false;
@@ -237,55 +237,48 @@
         let pipeSpawnTimer = 0;
         let pipeSpawnIntervalBase, currentPipeSpawnInterval; 
 
-        const difficultySettingsConfig = { // Rangos de parámetros de dificultad (Nivel 1 a Nivel 10)
+        const difficultySettingsConfig = { 
             gravity:           { min: 0.04, max: 0.15 }, 
             pipeSpeed:         { min: 0.8,  max: 2.5  }, 
-            pipeSpawnInterval: { min: 3.5,  max: 1.2  }  // Segundos entre tuberías (mayor es más fácil)
-            // pipeGap se mantiene fijo en 220, como en el código original que funcionaba
+            pipeSpawnInterval: { min: 4.0,  max: 1.2  } 
         };
-        pipeGapFixed = 220; // Valor fijo del código original
+        pipeGapFixed = 220; // VALOR FIJO para la separación vertical de las tuberías
 
         function applyDifficultySettings(level) {
-            const factor = (level - 1) / 9; // Factor de 0 a 1 para niveles 1 a 10
+            const factor = (level - 1) / 9; 
 
             gravityBase = difficultySettingsConfig.gravity.min + (difficultySettingsConfig.gravity.max - difficultySettingsConfig.gravity.min) * factor;
             pipeSpeedBase = difficultySettingsConfig.pipeSpeed.min + (difficultySettingsConfig.pipeSpeed.max - difficultySettingsConfig.pipeSpeed.min) * factor;
-            pipeSpawnIntervalBase = difficultySettingsConfig.pipeSpawnInterval.max - (difficultySettingsConfig.pipeSpawnInterval.max - difficultySettingsConfig.pipeSpawnInterval.min) * factor; // Invertido, menor es más difícil
+            pipeSpawnIntervalBase = difficultySettingsConfig.pipeSpawnInterval.max - (difficultySettingsConfig.pipeSpawnInterval.max - difficultySettingsConfig.pipeSpawnInterval.min) * factor; 
             
-            // Inicializar valores "current"
             currentGravity = gravityBase;
             currentPipeSpeed = pipeSpeedBase;
             currentPipeSpawnInterval = pipeSpawnIntervalBase;
-            currentPipeGap = pipeGapFixed; // Siempre el valor fijo
+            currentPipeGap = pipeGapFixed; // Usar siempre el valor fijo
 
-            console.log(`Dificultad Nivel ${level}: G=${currentGravity.toFixed(3)}, Speed=${currentPipeSpeed.toFixed(2)}, Spawn=${currentPipeSpawnInterval.toFixed(2)}s, Gap=${currentPipeGap.toFixed(0)}px`);
+            console.log(`Dificultad Nivel ${level}: G=${currentGravity.toFixed(3)}, Speed=${currentPipeSpeed.toFixed(2)}, Spawn=${currentPipeSpawnInterval.toFixed(2)}s, Gap=${currentPipeGap.toFixed(0)}px (fijo)`);
         }
 
         function increaseProgressiveDifficulty() {
-            // Aumento del ~10-15% sobre los valores *base* del nivel de dificultad inicial, o incrementos fijos
-            // Para evitar que se vuelva demasiado extremo rápidamente.
-            // El "30%" solicitado es muy alto si se aplica directamente y de forma compuesta.
-            // Lo interpretaremos como un "paso de aumento significativo".
+            // Aumento de ~30% interpretado como un incremento notable pero controlado
+            const speedIncreaseAmount = pipeSpeedBase * 0.30; 
+            const gravityIncreaseAmount = gravityBase * 0.30; 
+            const spawnDecreaseAmount = pipeSpawnIntervalBase * 0.20; // Disminuir intervalo un 20% (más frecuente)
 
-            const speedIncreaseFactor = 0.15; // Aumenta la velocidad un 15% del valor base del nivel
-            const gravityIncreaseFactor = 0.10; // Aumenta la gravedad un 10% del valor base
-            const spawnDecreaseFactor = 0.10; // Disminuye el intervalo de spawn un 10% del valor base
+            currentPipeSpeed += speedIncreaseAmount;
+            currentGravity += gravityIncreaseAmount;
+            currentPipeSpawnInterval -= spawnDecreaseAmount;
 
-            currentPipeSpeed += pipeSpeedBase * speedIncreaseFactor;
-            currentGravity += gravityBase * gravityIncreaseFactor;
-            currentPipeSpawnInterval -= pipeSpawnIntervalBase * spawnDecreaseFactor;
-
-            // Asegurar límites para que no se vuelva imposible o negativo
-            currentPipeSpeed = Math.min(currentPipeSpeed, difficultySettingsConfig.pipeSpeed.max * 1.2); // Límite superior un poco más allá del max del nivel 10
-            currentGravity = Math.min(currentGravity, difficultySettingsConfig.gravity.max * 1.2);
-            currentPipeSpawnInterval = Math.max(currentPipeSpawnInterval, difficultySettingsConfig.pipeSpawnInterval.max * 0.8); // Límite inferior (más rápido)
-
+            // Límites para que no se vuelva imposible
+            currentPipeSpeed = Math.min(currentPipeSpeed, difficultySettingsConfig.pipeSpeed.max * 1.5); // Límite superior más generoso
+            currentGravity = Math.min(currentGravity, difficultySettingsConfig.gravity.max * 1.5);
+            currentPipeSpawnInterval = Math.max(currentPipeSpawnInterval, difficultySettingsConfig.pipeSpawnInterval.max * 0.7); // Límite inferior (más rápido)
             // currentPipeGap no se modifica
             
             console.log(`Dificultad Progresiva Aumentada: G=${currentGravity.toFixed(3)}, Speed=${currentPipeSpeed.toFixed(2)}, Spawn=${currentPipeSpawnInterval.toFixed(2)}s`);
         }
         
-        function initGameSession() { // Anteriormente 'init' en el código proporcionado
+        function initGameSession() { 
             motoSize = 40; motoX = 60; motoY = canvas.height / 2 - motoSize / 2;
             motoVelocity = 0; 
             pipes = []; pipeWidth = 64; 
@@ -294,14 +287,14 @@
             isPaused = false; 
             isAnsweringQuestion = false; questionModal.style.display = 'none';
             finalVictoryMessageDisplay.style.display = 'none'; 
-            messageDisplay.style.display = 'none'; // Ocultar cualquier mensaje previo
+            messageDisplay.style.display = 'none'; 
             
             availableQuestions = [...questions]; 
             questionsAnsweredCorrectlyThisSession = 0; 
             milestonesReached = [];
             lastScoreThatTriggeredQuestion = 0;
             lastDifficultyIncreaseScore = 0; 
-            pipeSpawnTimer = currentPipeSpawnInterval; // Usar el intervalo actual
+            pipeSpawnTimer = currentPipeSpawnInterval; 
 
             lastTime = 0; 
 
@@ -311,7 +304,6 @@
             pauseButton.style.display = 'flex';
         }
 
-        // --- Eventos del Panel de Dificultad ---
         difficultySlider.addEventListener('input', (e) => {
             currentDifficultyLevel = parseInt(e.target.value);
             difficultyValueDisplay.textContent = currentDifficultyLevel;
@@ -402,7 +394,7 @@
             if (pipeSpawnTimer >= currentPipeSpawnInterval) {
                 pipeSpawnTimer = 0; 
                 let minTopHeight = 80;
-                let maxTopHeightPossible = canvas.height - groundHeight - currentPipeGap - 80; // Usa currentPipeGap
+                let maxTopHeightPossible = canvas.height - groundHeight - currentPipeGap - 80; 
                 if (maxTopHeightPossible < minTopHeight) maxTopHeightPossible = minTopHeight + 10; 
                 let topHeight = Math.random() * (maxTopHeightPossible - minTopHeight) + minTopHeight;
                 pipes.push({ x: canvas.width, topHeight: topHeight, passed: false });
@@ -461,7 +453,7 @@
             for (let pipe of pipes) {
                 const m = 2; 
                 if (motoX + motoSize - m > pipe.x && motoX + m < pipe.x + pipeWidth &&
-                    (motoY + m < pipe.topHeight || motoY + motoSize - m > pipe.topHeight + currentPipeGap)) { // Usa currentPipeGap
+                    (motoY + m < pipe.topHeight || motoY + motoSize - m > pipe.topHeight + currentPipeGap)) { 
                     gameOver("¡Chocaste con una tubería!"); return;
                 }
             }
@@ -614,7 +606,7 @@
             }
 
             let deltaTime = 0;
-            if (lastTime !== 0 && (gameState === 'PLAYING' || (gameState === 'PAUSED' && !isPaused) ) ) { // Calcular deltaTime si estamos jugando o si estamos despausando
+            if (lastTime !== 0 && (gameState === 'PLAYING' || (gameState === 'PAUSED' && !isPaused) ) ) { 
                 deltaTime = (timestamp - lastTime) / 1000;
             }
             lastTime = timestamp;
@@ -680,13 +672,11 @@
         
         function togglePause() {
             if (isAnsweringQuestion || gameState === 'ENDING' || gameState === 'GAMEOVER' || gameState === 'READY' || gameState === 'FINAL_VICTORY' || gameState === 'DIFFICULTY_SELECTION' || gameState === 'LOADING_ASSETS') return;
-            if (gameState === 'PLAYING' || gameState === 'PAUSED') { // Permitir pausar/despausar solo si está en estos estados
+            if (gameState === 'PLAYING' || gameState === 'PAUSED') { 
                 isPaused = !isPaused; 
-                if (!isPaused) { // Al despausar
+                if (!isPaused) { 
                     lastTime = performance.now(); 
-                    // El gameLoop continuará desde aquí
                 }
-                // gameState no se cambia aquí a 'PAUSED', solo la bandera isPaused. El gameLoop se detendrá por isPaused.
                 messageDisplay.textContent = isPaused ? 'PAUSADO' : '';
                 messageDisplay.style.display = isPaused ? 'block' : 'none';
                 updatePauseButtonIcon();
@@ -752,34 +742,33 @@
 
         assetsToActuallyLoad.forEach(assetEntry => {
             // Asignar src aquí para asegurar que los manejadores estén listos
-            assetEntry.img.onload = () => assetProcessed(assetEntry.name, true);
-            assetEntry.img.onerror = () => {
-                console.error(`Error al cargar la imagen: ${assetEntry.src}. Los fallbacks en canvas se usarán.`);
-                assetProcessed(assetEntry.name, false); 
-            };
-            // Para el GIF base64, el onload se puede disparar muy rápido.
-            if (assetEntry.name === 'dancingFoxImg') {
-                if (assetEntry.img.complete && assetEntry.img.src.startsWith('data:image/gif')) {
-                    assetProcessed(assetEntry.name, true); // Ya cargado
+            // Esto ya se hace arriba para las imágenes no base64
+            if (assetEntry.name === 'dancingFoxImg') { // Caso especial para el GIF base64
+                 if (assetEntry.img.complete && assetEntry.img.src.startsWith('data:image/gif')) {
+                    assetProcessed(assetEntry.name, true); 
                 } else {
-                    // El src ya está asignado arriba, así que los manejadores deberían funcionar.
+                    assetEntry.img.onload = () => assetProcessed(assetEntry.name, true);
+                    assetEntry.img.onerror = () => assetProcessed(assetEntry.name, false);
                 }
             } else {
-                // Para imágenes no base64, asignar el src ahora para iniciar la carga.
-                // Esto ya se hace arriba en la declaración de las constantes Image.
-                // Si alguna imagen no se carga, el .onerror se activará.
-                // Si ya está cacheada y completa, el .onload podría no dispararse si el src se asignó antes.
-                // Es más robusto si el src se asigna justo antes de añadir los listeners, o aquí.
-                // Pero como el código original lo tenía arriba, lo mantendremos así y confiaremos en que el navegador
-                // maneje los eventos onload/onerror correctamente incluso si el src se asignó antes.
-                // Para asegurar, podemos re-chequear 'complete' aquí si no es base64.
-                if (assetEntry.img.complete && assetEntry.img.naturalWidth !== undefined && assetEntry.img.naturalWidth !== 0) {
+                 if (assetEntry.img.complete && assetEntry.img.naturalWidth !== undefined && assetEntry.img.naturalWidth !== 0) {
                      assetProcessed(assetEntry.name, true);
+                } else {
+                    assetEntry.img.onload = () => assetProcessed(assetEntry.name, true);
+                    assetEntry.img.onerror = () => {
+                        console.error(`Error al cargar la imagen: ${assetEntry.src}. Los fallbacks en canvas se usarán.`);
+                        assetProcessed(assetEntry.name, false); 
+                    };
                 }
+            }
+             // Asignar src si aún no lo tiene (para las imágenes no base64, ya se hizo arriba)
+             // Esto es redundante si el src se asignó al crear el objeto Image, pero no hace daño.
+            if (!assetEntry.img.src) {
+                assetEntry.img.src = assetEntry.src;
             }
         });
         
-        // Asegurarse de que el lazo del juego inicie para el estado LOADING_ASSETS
+        // Iniciar el bucle del juego inmediatamente para manejar el estado LOADING_ASSETS
         requestAnimationFrame(gameLoop);
 
     </script>
