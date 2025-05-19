@@ -48,13 +48,38 @@
             color: white;
             text-align: center;
             text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000;
-            z-index: 10;
+            z-index: 10; 
             display: none;
             padding: 15px;
             background-color: rgba(0,0,0,0.4);
             border-radius: 8px;
             width: 80%;
             box-sizing: border-box;
+        }
+        #finalVictoryMessage { 
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 85, 120, 0.9); 
+            z-index: 25; 
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+            color: white;
+            text-align: center;
+            font-size: 28px; 
+            font-weight: bold;
+            text-shadow: 2px 2px 4px #000;
+        }
+        #finalVictoryMessage small {
+            font-size: 18px;
+            margin-top: 20px;
+            font-weight: normal;
         }
         #pauseButton {
             position: absolute;
@@ -84,8 +109,6 @@
             border-bottom: 10px solid transparent;
             border-left: 18px solid white;
         }
-
-        /* Estilos para el Modal de Preguntas */
         #questionModal {
             position: absolute;
             top: 0;
@@ -104,15 +127,15 @@
             text-align: center;
         }
         #questionText {
-            font-size: 17px; /* Ligeramente más pequeño para preguntas largas */
+            font-size: 17px;
             margin-bottom: 15px;
             line-height: 1.4;
         }
         #answerButtonsContainer button {
             display: block;
-            width: 90%; /* Un poco más ancho */
-            margin: 8px auto; /* Menos margen vertical */
-            padding: 10px; /* Un poco menos padding */
+            width: 90%;
+            margin: 8px auto;
+            padding: 10px;
             font-size: 15px;
             background-color: #4CAF50;
             color: white;
@@ -131,6 +154,9 @@
         <canvas id="gameCanvas"></canvas>
         <div id="scoreDisplay">0</div>
         <div id="messageDisplay"></div>
+        <div id="finalVictoryMessage"> ¡Eres lo mejor que hay, muchas gracias!!<br>¡GANASTE!
+            <br><small>Pulsa para jugar de nuevo</small>
+        </div>
         <div id="pauseButton"></div>
         <div id="questionModal">
             <div id="questionText"></div>
@@ -144,6 +170,7 @@
         const ctx = canvas.getContext('2d');
         const scoreDisplay = document.getElementById('scoreDisplay');
         const messageDisplay = document.getElementById('messageDisplay');
+        const finalVictoryMessageDisplay = document.getElementById('finalVictoryMessage');
         const pauseButton = document.getElementById('pauseButton');
         const questionModal = document.getElementById('questionModal');
         const questionText = document.getElementById('questionText');
@@ -158,29 +185,28 @@
         const pipeBottomImg = new Image(); pipeBottomImg.src = './imagenes/tuberia_abajo.svg';
         const groundImg = new Image(); groundImg.src = './imagenes/suelo.svg';
         const bgImg = new Image(); bgImg.src = './imagenes/fondo_juego.svg';
-        const zorroVictoriaImg = new Image(); zorroVictoriaImg.src = './imagenes/zorro_victoria.jpg';
         const dancingFoxImg = new Image(); dancingFoxImg.src = 'data:image/gif;base64,R0lGODlhIAAgAPIEAAAAAP/OAAAA/84A////AAAAACH/C05FVFNDQVBFMi4wAwEAAAAh+QQJFAACACwAAAAAIAAgAAADXei63P4wykmrvTjrzbv/YCiOZGmeaKqubOu+cCzPdG3feK7vfO//wKBwSCwaj8ikcslsOp/QqHRKrVqv2Kx2y+16v+CweEwum8/otHrNbrvf8Lh8Tq/b7/i8fs/v+/+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChooqMhR0AAAAh+QQJFAACACwEAAIAFwAWAAADQHi63P4wykmrvTjrzbv/YCiOZGmeaKqubOu+cCzPdG3feK7vfO//wKAwSBQeiEghlHMpyfE0pFQrjVLjB+xOq3f0mJxbM9oVAAA7';
 
         // --- Variables del Juego ---
         let motoX, motoY, motoVelocity, motoSize;
         let gravity;
         let pipes;
-        let pipeWidth, pipeGap, pipeSpeed;
+        let pipeWidth, pipeGap, pipeOriginalSpeed;
         let score;
-        let frames;
         let gameState;
         let isPaused = false;
         let groundHeight = 50;
         let groundX = 0;
-        const scoreMetaInicial = 10; 
-        let victoriaAlcanzada = false;
+
+        // --- Variables para Delta Time ---
+        let lastTime = 0;
+        const TARGET_FPS = 60; // El juego se balanceó originalmente pensando en esta tasa de frames
+        // const TARGET_DELTATIME = 1 / TARGET_FPS; // No se usa directamente, pero es la base
 
         // --- Variables para el Sistema de Preguntas ---
         let isAnsweringQuestion = false;
         let currentQuestionData = null;
-
-        // --- BANCO DE PREGUNTAS ---
-        const questions = [
+        const questions = [ 
             { text: "¿Cuál es el nombre del niño que tiene una cama voladora?", options: ["a) Bernardo", "b) Bartolo", "c) Benjamín"], correctAnswerIndex: 1 },
             { text: "En la ciudad secreta de los Andes, ¿cuál es el principal problema que deben resolver Bartolo y sus nuevos amigos?", options: ["a) Una inundación que amenaza la ciudad.", "b) Un meteorito que ha tapado el cráter por donde sale el sol.", "c) La desaparición del libro de hechizos de la ciudad."], correctAnswerIndex: 1 },
             { text: "¿Cuál de estos animales NO es un personaje que Bartolo conoce en la ciudad secreta?", options: ["a) Pascual, el conejo.", "b) Valentín, el puma.", "c) Lorenzo, el loro."], correctAnswerIndex: 2 },
@@ -192,30 +218,45 @@
             { text: "¿Quién es Sofía en la historia?", options: ["a) La hermana de Bartolo que lo espera en casa.", "b) Una estrella que guía a Bartolo en su viaje.", "c) Una niña aventurera que vive en la ciudad secreta y ayuda a resolver el problema del sol."], correctAnswerIndex: 2 },
             { text: "¿Qué actitud o cualidad de Bartolo es fundamental para enfrentar los desafíos en la ciudad secreta?", options: ["a) Su escepticismo y cautela ante lo desconocido.", "b) Su ingenio y disposición a escuchar y valorar las ideas de los demás.", "c) Su fuerza física superior a la de los animales."], correctAnswerIndex: 1 }
         ];
+        let totalQuestionsInGame = questions.length; 
+        let questionsAnsweredCorrectlyThisSession = 0; 
         let availableQuestions = [];
-        const questionMilestones = [3, 6, 11, 17, 20]; // Hitos específicos para preguntas
-        let milestonesReached = []; // Rastrea los hitos específicos ya usados
-        let lastScoreThatTriggeredQuestion = 0; // Evita re-disparos en el mismo score
+        const questionMilestones = [3, 6, 11, 17, 20];
+        let milestonesReached = [];
+        let lastScoreThatTriggeredQuestion = 0;
+        
+        let pipeSpawnTimer = 0;
+        // Ajuste de dificultad: Intervalo de aparición de tuberías reducido
+        const PIPE_SPAWN_INTERVAL = 1.665; // Original: 3.33 (aprox. la mitad)
 
         function init() {
             motoSize = 40; motoX = 60; motoY = canvas.height / 2 - motoSize / 2;
-            motoVelocity = 0; gravity = 0.05;
-            pipes = []; pipeWidth = 64; pipeGap = 220; pipeSpeed = 0.8;
-            score = 0; frames = 0;
+            motoVelocity = 0; 
+            // Ajuste de dificultad: Gravedad aumentada
+            gravity = 0.10; // Original: 0.05
+            pipes = []; pipeWidth = 64; pipeGap = 220; // El gap podría reducirse para más dificultad, pero por ahora solo velocidad
+            // Ajuste de dificultad: Velocidad de tuberías aumentada
+            pipeOriginalSpeed = 1.6; // Original: 0.8
+            score = 0; 
             gameState = 'READY';
-            isPaused = false; victoriaAlcanzada = false;
+            isPaused = false; 
             isAnsweringQuestion = false; questionModal.style.display = 'none';
+            finalVictoryMessageDisplay.style.display = 'none'; 
             
-            availableQuestions = [...questions]; // Copia fresca de preguntas
-            milestonesReached = []; // Reinicia hitos alcanzados
-            lastScoreThatTriggeredQuestion = 0; // Reinicia el tracker
+            availableQuestions = [...questions]; 
+            questionsAnsweredCorrectlyThisSession = 0; 
+            milestonesReached = [];
+            lastScoreThatTriggeredQuestion = 0;
+            pipeSpawnTimer = PIPE_SPAWN_INTERVAL; // Para que la primera tubería aparezca antes
+
+            lastTime = 0; 
 
             updatePauseButtonIcon();
             scoreDisplay.textContent = score;
             messageDisplay.innerHTML = 'Pulsa o haz clic<br>para Empezar la Aventura';
             messageDisplay.style.display = 'block';
             messageDisplay.style.top = '40%';
-            pauseButton.style.display = 'flex';
+            pauseButton.style.display = 'flex'; 
         }
 
         function drawMoto() {
@@ -256,14 +297,20 @@
                 }
             }
         }
-
-        function updateMoto() {
-            motoVelocity += gravity; motoY += motoVelocity;
-            if (motoY < -motoSize * 0.2) { motoY = -motoSize * 0.2; motoVelocity = gravity * 2; }
+        
+        function updateMoto(deltaTime) {
+            motoVelocity += gravity * TARGET_FPS * deltaTime;
+            motoY += motoVelocity * TARGET_FPS * deltaTime;
+            if (motoY < -motoSize * 0.2) { 
+                motoY = -motoSize * 0.2; 
+                motoVelocity = gravity * 2 * TARGET_FPS * deltaTime; 
+            }
         }
 
-        function updatePipes() {
-            if (frames % 200 === 0) {
+        function updatePipes(deltaTime) {
+            pipeSpawnTimer += deltaTime;
+            if (pipeSpawnTimer >= PIPE_SPAWN_INTERVAL) {
+                pipeSpawnTimer = 0; 
                 let minTopHeight = 80;
                 let maxTopHeightPossible = canvas.height - groundHeight - pipeGap - 80;
                 let topHeight = Math.random() * (maxTopHeightPossible - minTopHeight) + minTopHeight;
@@ -271,7 +318,7 @@
             }
 
             pipes.forEach(pipe => {
-                pipe.x -= pipeSpeed;
+                pipe.x -= pipeOriginalSpeed * TARGET_FPS * deltaTime; 
                 if (pipe.x + pipeWidth < 0) { pipes.shift(); }
 
                 if (!pipe.passed && pipe.x + pipeWidth < motoX) {
@@ -280,37 +327,28 @@
                     scoreDisplay.textContent = score;
 
                     let questionShouldBeTriggered = false;
-                    
-                    // 1. Verificar hitos específicos no alcanzados
                     for (let i = 0; i < questionMilestones.length; i++) {
                         const milestone = questionMilestones[i];
                         if (score === milestone && !milestonesReached.includes(milestone)) {
                             questionShouldBeTriggered = true;
-                            milestonesReached.push(milestone); // Marcar hito como usado
+                            milestonesReached.push(milestone);
                             break; 
                         }
                     }
-
-                    // 2. Verificar múltiplos de 5 después de 20 (si no se activó por hito)
                     if (!questionShouldBeTriggered && score > 20 && score % 5 === 0) {
-                        // Evitar re-trigger si este score ya activó una pregunta (como hito o múltiplo anterior)
                         if (!milestonesReached.includes(score) && score !== lastScoreThatTriggeredQuestion) {
                             questionShouldBeTriggered = true;
                         }
                     }
-                    
                     if (questionShouldBeTriggered) {
                         if (!isAnsweringQuestion && gameState === 'PLAYING') {
                             triggerQuestion();
-                            lastScoreThatTriggeredQuestion = score; // Registrar que este score disparó una pregunta
+                            lastScoreThatTriggeredQuestion = score;
                         }
                     }
-
-                    // Lógica de victoria (solo si no hay pregunta activa)
-                    if (!isAnsweringQuestion) {
-                        if (score === scoreMetaInicial && !victoriaAlcanzada) {
-                            mostrarPantallaVictoriaIntermedia();
-                        } else if (score === 9999 && gameState !== 'ENDING') {
+                    
+                    if (!isAnsweringQuestion && gameState !== 'FINAL_VICTORY') { 
+                         if (score === 9999 && gameState !== 'ENDING') { 
                             enterEndingSequence();
                         }
                     }
@@ -318,14 +356,14 @@
             });
         }
 
-        function checkCollisions() {
+        function checkCollisions() { 
             if (gameState !== 'PLAYING' || isAnsweringQuestion) return;
             if (motoY + motoSize > canvas.height - groundHeight) {
                 motoY = canvas.height - groundHeight - motoSize;
                 gameOver("¡Caíste al suelo!"); return;
             }
             for (let pipe of pipes) {
-                const m = 2; // margen
+                const m = 2;
                 if (motoX + motoSize - m > pipe.x && motoX + m < pipe.x + pipeWidth &&
                     (motoY + m < pipe.topHeight || motoY + motoSize - m > pipe.topHeight + pipeGap)) {
                     gameOver("¡Chocaste con una tubería!"); return;
@@ -333,8 +371,8 @@
             }
         }
 
-        function updateGround() {
-            groundX -= pipeSpeed;
+        function updateGround(deltaTime) {
+            groundX -= pipeOriginalSpeed * TARGET_FPS * deltaTime; 
             if (groundImg.complete && groundImg.naturalWidth !== 0 && groundImg.width > 0) {
                 if (groundX <= -groundImg.width) { groundX += groundImg.width; }
             }
@@ -342,37 +380,20 @@
 
         function flap() {
             if (gameState === 'PLAYING' && !isPaused && !isAnsweringQuestion) {
-                motoVelocity = -2.8;
+                motoVelocity = -2.8; // El impulso del salto se mantiene, pero la gravedad aumentada lo hace más difícil
             }
         }
 
         function gameOver(reason = "¡Oh no, Zorro!") {
-            if (gameState === 'GAMEOVER' || gameState === 'ENDING' || gameState === 'VICTORY_INTERMEDIATE') return;
-            gameState = 'GAMEOVER'; isPaused = true;
+            if (gameState === 'GAMEOVER' || gameState === 'ENDING' || gameState === 'FINAL_VICTORY') return;
+            gameState = 'GAMEOVER'; 
+            isPaused = true; 
             messageDisplay.innerHTML = `${reason}<br>Puntuación Final: ${score}<br><small>Pulsa para reintentar</small>`;
             messageDisplay.style.top = '40%'; messageDisplay.style.display = 'block';
             questionModal.style.display = 'none';
+            finalVictoryMessageDisplay.style.display = 'none'; 
         }
         
-        function mostrarPantallaVictoriaIntermedia() {
-            if (gameState === 'ENDING' || isAnsweringQuestion) return;
-            isPaused = true; victoriaAlcanzada = true; gameState = 'VICTORY_INTERMEDIATE';
-            updatePauseButtonIcon(); ctx.clearRect(0, 0, canvas.width, canvas.height);
-            if (bgImg.complete && bgImg.naturalWidth !== 0) drawBackgroundStatic();
-            else { ctx.fillStyle = '#70c5ce'; ctx.fillRect(0, 0, canvas.width, canvas.height); }
-            drawGroundStatic();
-            if (zorroVictoriaImg.complete && zorroVictoriaImg.naturalWidth !== 0) {
-                const imgW = zorroVictoriaImg.naturalWidth, imgH = zorroVictoriaImg.naturalHeight;
-                let dW = canvas.width * 0.9, dH = (imgH / imgW) * dW;
-                if (dH > canvas.height * 0.6) { dH = canvas.height * 0.6; dW = (imgW / imgH) * dH; }
-                if (dW > canvas.width * 0.9) { dW = canvas.width * 0.9; dH = (imgH / imgW) * dW; }
-                ctx.drawImage(zorroVictoriaImg, (canvas.width - dW) / 2, (canvas.height - dH) / 4, dW, dH);
-                messageDisplay.innerHTML = `¡Lo lograron!<br>"¡Vamos a conseguir la hazaña de salvar al mundo!"<br><small>Pulsa para continuar</small>`;
-            } else { messageDisplay.innerHTML = `¡FELICIDADES!<br>Alcanzaste ${scoreMetaInicial} puntos.<br><small>Pulsa para continuar</small>`; }
-            messageDisplay.style.top = '75%'; messageDisplay.style.display = 'block';
-            scoreDisplay.textContent = score;
-        }
-
         function drawGroundStatic() {
             if (groundImg.complete && groundImg.naturalWidth !== 0 && groundImg.width > 0) {
                  for (let i = 0; (i * groundImg.width) < canvas.width + groundImg.width; i++) {
@@ -380,15 +401,19 @@
                 }
             } else { ctx.fillStyle = '#d2b48c'; ctx.fillRect(0, canvas.height - groundHeight, canvas.width, groundHeight); }
         }
-        function drawBackgroundStatic() {
+        function drawBackgroundStatic() { 
             if (bgImg.complete && bgImg.naturalWidth !== 0 && bgImg.width > 0) {
                  for (let i = 0; (i * bgImg.width) < canvas.width + bgImg.width; i++) {
                     ctx.drawImage(bgImg, (i * bgImg.width) , 0, bgImg.width, canvas.height - groundHeight);
                 }
+            } else { 
+                ctx.fillStyle = '#70c5ce'; 
+                ctx.fillRect(0,0, canvas.width, canvas.height - groundHeight);
             }
         }
 
-        function enterEndingSequence() {
+        function enterEndingSequence() { 
+            if (gameState === 'FINAL_VICTORY') return; 
             gameState = 'ENDING'; pipes = [];
             motoX = canvas.width / 2 - motoSize / 2; motoY = canvas.height - groundHeight - motoSize - 10;
             motoVelocity = 0; messageDisplay.innerHTML = `¡FIN DE LA AVENTURA!`;
@@ -401,7 +426,7 @@
             ctx.fillStyle = '#505050';
             for(let y=0; y<canvas.height; y+=20) for(let x=(y/20)%2===0?0:-10; x<canvas.width; x+=40) ctx.fillRect(x,y,38,18);
             ctx.fillStyle = '#404040'; ctx.fillRect(0, canvas.height - groundHeight + 10, canvas.width, groundHeight-10);
-            const dFS = 64; // dancingFoxSize
+            const dFS = 64;
             if (dancingFoxImg.complete && dancingFoxImg.naturalWidth !== 0) {
                  ctx.drawImage(dancingFoxImg, canvas.width/2 - dFS/2, canvas.height - groundHeight - dFS + 10, dFS, dFS);
             } else { ctx.fillStyle = 'orange'; ctx.fillRect(canvas.width/2 - motoSize/2, canvas.height - groundHeight - motoSize + 10, motoSize, motoSize); }
@@ -410,13 +435,21 @@
             scoreDisplay.textContent = '9999';
         }
 
+        function showFinalVictory() {
+            gameState = 'FINAL_VICTORY';
+            isPaused = true;
+            questionModal.style.display = 'none';
+            messageDisplay.style.display = 'none';
+            finalVictoryMessageDisplay.style.display = 'flex';
+            pauseButton.style.display = 'none'; 
+        }
+
         function triggerQuestion() {
-            if (availableQuestions.length === 0) {
-                console.log("No hay más preguntas disponibles.");
-                // Opcional: reiniciar availableQuestions = [...questions]; si se quiere repetir.
-                // Por ahora, si se acaban, no se hacen más preguntas.
-                isPaused = false; // Asegurar que el juego no quede pausado si no hay pregunta
-                updatePauseButtonIcon();
+            if (availableQuestions.length === 0) { 
+                console.log("Se intentó disparar pregunta, pero ya no hay disponibles.");
+                if (gameState !== 'FINAL_VICTORY') { 
+                     showFinalVictory();
+                }
                 return; 
             }
             if (isAnsweringQuestion || gameState !== 'PLAYING') return;
@@ -425,7 +458,7 @@
             updatePauseButtonIcon();
 
             const questionIndex = Math.floor(Math.random() * availableQuestions.length);
-            currentQuestionData = availableQuestions.splice(questionIndex, 1)[0];
+            currentQuestionData = availableQuestions.splice(questionIndex, 1)[0]; 
 
             questionText.textContent = currentQuestionData.text;
             answerButtonsContainer.innerHTML = ''; 
@@ -443,69 +476,87 @@
             if (!currentQuestionData) return;
 
             if (selectedIndex === currentQuestionData.correctAnswerIndex) {
-                score -= 5; 
-                if (score < 0) score = 0; 
-                scoreDisplay.textContent = score;
-                // No es necesario actualizar lastScoreThatTriggeredQuestion aquí, ya se hizo al disparar.
-                messageDisplay.innerHTML = "¡Correcto! Pierdes 5 puntos.<br>Continúa la aventura.";
-                messageDisplay.style.display = 'block';
-                setTimeout(() => {
-                    messageDisplay.style.display = 'none';
-                    isAnsweringQuestion = false; isPaused = false;
-                    updatePauseButtonIcon(); questionModal.style.display = 'none';
-                }, 2000); // Un poco más de tiempo para leer el mensaje
+                questionsAnsweredCorrectlyThisSession++; 
+                
+                if (availableQuestions.length === 0 && questionsAnsweredCorrectlyThisSession === totalQuestionsInGame) {
+                    questionModal.style.display = 'none'; 
+                    showFinalVictory();
+                } else {
+                    messageDisplay.innerHTML = "¡Correcto!<br>Continúa la aventura.";
+                    messageDisplay.style.display = 'block';
+                    setTimeout(() => {
+                        messageDisplay.style.display = 'none';
+                        isAnsweringQuestion = false; isPaused = false;
+                        updatePauseButtonIcon(); questionModal.style.display = 'none';
+                    }, 1500);
+                }
             } else {
-                questionModal.style.display = 'none';
-                gameOver("¡Respuesta incorrecta!");
+                questionModal.style.display = 'none'; 
+                gameOver("¡Respuesta incorrecta!"); 
             }
             currentQuestionData = null;
         }
+        
+        function gameLoop(timestamp) {
+            if (lastTime === 0) { lastTime = timestamp; }
+            let deltaTime = (timestamp - lastTime) / 1000; 
+            lastTime = timestamp;
+            deltaTime = Math.min(deltaTime, 0.1); 
 
-        function gameLoop() {
-            if (!isPaused || gameState === 'VICTORY_INTERMEDIATE') {
+            if (gameState === 'FINAL_VICTORY') {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                drawBackgroundStatic(); 
+                drawGroundStatic();     
+                requestAnimationFrame(gameLoop);
+                return; 
+            }
+
+            if (!isPaused) { 
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 if (gameState === 'ENDING') { drawEndingSequence(); }
-                else if (gameState === 'VICTORY_INTERMEDIATE') {
-                    if (bgImg.complete && bgImg.naturalWidth !== 0) drawBackgroundStatic();
-                    else { ctx.fillStyle = '#70c5ce'; ctx.fillRect(0, 0, canvas.width, canvas.height); }
-                    drawGroundStatic();
-                    if (zorroVictoriaImg.complete && zorroVictoriaImg.naturalWidth !== 0) {
-                        const imgW=zorroVictoriaImg.naturalWidth, imgH=zorroVictoriaImg.naturalHeight;
-                        let dW=canvas.width*0.9,dH=(imgH/imgW)*dW;
-                        if(dH > canvas.height*0.6){dH=canvas.height*0.6;dW=(imgW/imgH)*dH;}
-                        if(dW > canvas.width*0.9){dW=canvas.width*0.9;dH=(imgH/imgW)*dW;}
-                        ctx.drawImage(zorroVictoriaImg,(canvas.width-dW)/2,(canvas.height-dH)/4,dW,dH);
-                    }
-                } else {
+                else { 
                     drawBackground(); drawPipes(); drawGround(); drawMoto();
-                    if (gameState === 'PLAYING' && !isPaused && !isAnsweringQuestion) {
-                        updateMoto(); updatePipes(); updateGround(); checkCollisions(); frames++;
+                    if (gameState === 'PLAYING' && !isAnsweringQuestion) { 
+                        updateMoto(deltaTime); 
+                        updatePipes(deltaTime); 
+                        updateGround(deltaTime); 
+                        checkCollisions(); 
                     }
                 }
             }
-            requestAnimationFrame(gameLoop);
+            requestAnimationFrame(gameLoop); 
         }
 
         function handleInput() {
-            if (isAnsweringQuestion) return;
-            if (gameState === 'VICTORY_INTERMEDIATE') {
-                isPaused = false; gameState = 'PLAYING';
-                messageDisplay.style.display = 'none'; updatePauseButtonIcon(); return;
+            if (isAnsweringQuestion && gameState !== 'GAMEOVER') return;
+            
+            if (gameState === 'FINAL_VICTORY') { 
+                init();
+                return;
             }
+            
             if (isPaused && gameState !== 'GAMEOVER' && gameState !== 'READY') return;
 
             if (gameState === 'READY') {
                 gameState = 'PLAYING'; isPaused = false;
                 messageDisplay.style.display = 'none'; pauseButton.style.display = 'flex';
+                lastTime = 0; 
                 flap();
-            } else if (gameState === 'PLAYING') { flap(); }
-            else if (gameState === 'GAMEOVER' || gameState === 'ENDING') { init(); }
+            } else if (gameState === 'PLAYING' && !isPaused) { 
+                 flap(); 
+            } else if (gameState === 'GAMEOVER' || gameState === 'ENDING') { 
+                init(); 
+            }
         }
         
         function togglePause() {
-            if (isAnsweringQuestion || gameState === 'ENDING' || gameState === 'VICTORY_INTERMEDIATE' || gameState === 'GAMEOVER' || gameState === 'READY') return;
+            if (isAnsweringQuestion || gameState === 'ENDING' || gameState === 'GAMEOVER' || gameState === 'READY' || gameState === 'FINAL_VICTORY') return;
             if (gameState === 'PLAYING' || gameState === 'PAUSED') {
-                isPaused = !isPaused; gameState = isPaused ? 'PAUSED' : 'PLAYING';
+                isPaused = !isPaused; 
+                if (!isPaused) { 
+                    lastTime = performance.now(); 
+                }
+                gameState = isPaused ? 'PAUSED' : 'PLAYING';
                 messageDisplay.textContent = isPaused ? 'PAUSADO' : '';
                 messageDisplay.style.display = isPaused ? 'block' : 'none';
                 updatePauseButtonIcon();
@@ -513,7 +564,7 @@
         }
 
         function updatePauseButtonIcon() {
-            if (isPaused && !isAnsweringQuestion && gameState !== 'VICTORY_INTERMEDIATE') {
+            if (isPaused && !isAnsweringQuestion && gameState !== 'FINAL_VICTORY') { 
                  pauseButton.innerHTML = '<div class="playIconTriangle"></div>';
             } else {
                  pauseButton.innerHTML = '<div class="pauseIconBar"></div><div class="pauseIconBar"></div>';
@@ -522,7 +573,8 @@
 
         gameContainer.addEventListener('click', (event) => {
             if (event.target !== pauseButton && !pauseButton.contains(event.target) &&
-                event.target !== questionModal && !questionModal.contains(event.target)) {
+                event.target !== questionModal && !questionModal.contains(event.target) &&
+                event.target !== finalVictoryMessageDisplay && !finalVictoryMessageDisplay.contains(event.target) ) { 
                 handleInput();
             }
         });
@@ -531,24 +583,35 @@
         });
         pauseButton.addEventListener('click', (event) => { event.stopPropagation(); togglePause(); });
 
-        const allAssetPaths = [ motoFoxImg.src, pipeTopImg.src, pipeBottomImg.src, groundImg.src, bgImg.src, zorroVictoriaImg.src ];
-        let assetsToLoadCount = allAssetPaths.length; let assetsLoadedCount = 0;
-        function assetLoadedCallback(imgEl, imgP) {
-            assetsLoadedCount++; console.log(`Asset cargado: ${imgP} (${assetsLoadedCount}/${assetsToLoadCount})`);
-            if (assetsLoadedCount === assetsToLoadCount) { console.log("Assets cargados!"); init(); gameLoop(); }
+        // --- Carga de Assets ---
+        const assetList = [motoFoxImg, pipeTopImg, pipeBottomImg, groundImg, bgImg];
+        let assetsToLoadCount = assetList.length; 
+        let assetsLoadedCount = 0;
+
+        function assetLoadedCallback(imgEl, imgPath) {
+            assetsLoadedCount++; console.log(`Asset cargado: ${imgPath} (${assetsLoadedCount}/${assetsToLoadCount})`);
+            if (assetsLoadedCount === assetsToLoadCount) { 
+                console.log("¡Todos los assets principales cargados! Iniciando juego..."); 
+                init(); 
+                requestAnimationFrame(gameLoop);
+            }
         }
-        function assetErrorCallback(imgEl, imgP) {
-            console.error(`Error al cargar: ${imgP}.`); assetsLoadedCount++;
-            if (assetsLoadedCount === assetsToLoadCount) { console.warn("Juego con assets faltantes."); init(); gameLoop(); }
+        function assetErrorCallback(imgEl, imgPath) {
+            console.error(`Error al cargar la imagen: ${imgPath}.`); assetsLoadedCount++;
+            if (assetsLoadedCount === assetsToLoadCount) { 
+                console.warn("Juego iniciado con algunos assets faltantes. Se usarán fallbacks."); 
+                init(); 
+                requestAnimationFrame(gameLoop);
+            }
         }
-        allAssetPaths.forEach((path, index) => {
-            const img = [motoFoxImg, pipeTopImg, pipeBottomImg, groundImg, bgImg, zorroVictoriaImg][index];
+        assetList.forEach(img => { 
+            const path = img.src; 
             img.onload = () => assetLoadedCallback(img, path);
             img.onerror = () => assetErrorCallback(img, path);
         });
-        dancingFoxImg.onload = () => console.log("GIF cargado.");
-        dancingFoxImg.onerror = () => console.warn('Error GIF.');
+        dancingFoxImg.onload = () => console.log("Dancing fox GIF (base64) cargado.");
+        dancingFoxImg.onerror = () => console.warn('Error al cargar dancingFoxImg (base64).');
+
     </script>
 </body>
 </html>
-
