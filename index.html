@@ -105,13 +105,12 @@
         }
         #answerButtonsContainer button:hover { background-color: #45a049; }
 
-        /* Panel de Selección de Dificultad */
         #difficultySelectionModal {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(0, 0, 0, 0.9);
             z-index: 30; 
-            display: flex; /* Se mostrará por JS después de cargar assets */
+            display: flex; 
             flex-direction: column;
             justify-content: center;
             align-items: center;
@@ -137,9 +136,9 @@
 </head>
 <body>
     <div id="gameContainer">
-        <div id="difficultySelectionModal"> {/* Se mostrará por JS */}
+        <div id="difficultySelectionModal"> 
             <h2>Selecciona la Dificultad</h2>
-            <label for="difficultySlider">Nivel de Dificultad: <span id="difficultyValue">5</span></label>
+            <label for="difficultySlider">Nivel (Velocidad/Gravedad): <span id="difficultyValue">5</span></label>
             <input type="range" id="difficultySlider" min="1" max="10" value="5">
             
             <div class="checkbox-container">
@@ -199,16 +198,14 @@
         let pipeWidth, pipeGapFixed; 
         let pipeSpeedBase, currentPipeSpeed; 
         let score;
-        let gameState = 'LOADING_ASSETS'; // Estado inicial
+        let gameState = 'LOADING_ASSETS'; 
         let isPaused = false;
         let groundHeight = 50;
         let groundX = 0;
 
-        // --- Variables para Delta Time ---
         let lastTime = 0;
         const TARGET_FPS = 60;
 
-        // --- Variables para el Sistema de Preguntas ---
         let isAnsweringQuestion = false;
         let currentQuestionData = null;
         const questions = [ 
@@ -230,49 +227,50 @@
         let milestonesReached = [];
         let lastScoreThatTriggeredQuestion = 0;
         
-        // --- Variables de Dificultad ---
         let currentDifficultyLevel = 5; 
         let progressiveDifficultyEnabled = false;
         let lastDifficultyIncreaseScore = 0;
         let pipeSpawnTimer = 0;
-        let pipeSpawnIntervalBase, currentPipeSpawnInterval; 
+        let pipeSpawnIntervalFixed; // Frecuencia horizontal base FIJA
+        let currentPipeSpawnInterval; // Para la dificultad progresiva
 
         const difficultySettingsConfig = { 
-            gravity:           { min: 0.04, max: 0.15 }, 
-            pipeSpeed:         { min: 0.8,  max: 2.5  }, 
-            pipeSpawnInterval: { min: 4.0,  max: 1.2  } 
+            gravity:   { min: 0.04, max: 0.15 }, 
+            pipeSpeed: { min: 0.8,  max: 2.5  }
+            // pipeGap y pipeSpawnInterval ya no se definen por rangos aquí
         };
-        pipeGapFixed = 220; // VALOR FIJO para la separación vertical de las tuberías
+        pipeGapFixed = 220; 
+        pipeSpawnIntervalFixed = 2.0; // Frecuencia horizontal similar a "Nivel 5" (segundos)
 
         function applyDifficultySettings(level) {
             const factor = (level - 1) / 9; 
 
             gravityBase = difficultySettingsConfig.gravity.min + (difficultySettingsConfig.gravity.max - difficultySettingsConfig.gravity.min) * factor;
             pipeSpeedBase = difficultySettingsConfig.pipeSpeed.min + (difficultySettingsConfig.pipeSpeed.max - difficultySettingsConfig.pipeSpeed.min) * factor;
-            pipeSpawnIntervalBase = difficultySettingsConfig.pipeSpawnInterval.max - (difficultySettingsConfig.pipeSpawnInterval.max - difficultySettingsConfig.pipeSpawnInterval.min) * factor; 
             
             currentGravity = gravityBase;
             currentPipeSpeed = pipeSpeedBase;
-            currentPipeSpawnInterval = pipeSpawnIntervalBase;
+            currentPipeSpawnInterval = pipeSpawnIntervalFixed; // Usar el valor fijo
             currentPipeGap = pipeGapFixed; // Usar siempre el valor fijo
 
-            console.log(`Dificultad Nivel ${level}: G=${currentGravity.toFixed(3)}, Speed=${currentPipeSpeed.toFixed(2)}, Spawn=${currentPipeSpawnInterval.toFixed(2)}s, Gap=${currentPipeGap.toFixed(0)}px (fijo)`);
+            console.log(`Dificultad Nivel ${level}: G=${currentGravity.toFixed(3)}, Speed=${currentPipeSpeed.toFixed(2)}, Spawn=${currentPipeSpawnInterval.toFixed(2)}s (fijo base), Gap=${currentPipeGap.toFixed(0)}px (fijo)`);
         }
 
         function increaseProgressiveDifficulty() {
-            // Aumento de ~30% interpretado como un incremento notable pero controlado
-            const speedIncreaseAmount = pipeSpeedBase * 0.30; 
-            const gravityIncreaseAmount = gravityBase * 0.30; 
-            const spawnDecreaseAmount = pipeSpawnIntervalBase * 0.20; // Disminuir intervalo un 20% (más frecuente)
+            // Aumento para la dificultad progresiva
+            // Aplicar un aumento del 10% sobre el valor *base* del nivel seleccionado
+            const speedIncrease = pipeSpeedBase * 0.10; 
+            const gravityIncrease = gravityBase * 0.10; 
+            const spawnIntervalDecrease = pipeSpawnIntervalFixed * 0.08; // Reducir un 8% del intervalo fijo base
 
-            currentPipeSpeed += speedIncreaseAmount;
-            currentGravity += gravityIncreaseAmount;
-            currentPipeSpawnInterval -= spawnDecreaseAmount;
+            currentPipeSpeed += speedIncrease;
+            currentGravity += gravityIncrease;
+            currentPipeSpawnInterval -= spawnIntervalDecrease;
 
             // Límites para que no se vuelva imposible
-            currentPipeSpeed = Math.min(currentPipeSpeed, difficultySettingsConfig.pipeSpeed.max * 1.5); // Límite superior más generoso
-            currentGravity = Math.min(currentGravity, difficultySettingsConfig.gravity.max * 1.5);
-            currentPipeSpawnInterval = Math.max(currentPipeSpawnInterval, difficultySettingsConfig.pipeSpawnInterval.max * 0.7); // Límite inferior (más rápido)
+            currentPipeSpeed = Math.min(currentPipeSpeed, difficultySettingsConfig.pipeSpeed.max * 1.3); 
+            currentGravity = Math.min(currentGravity, difficultySettingsConfig.gravity.max * 1.3);
+            currentPipeSpawnInterval = Math.max(currentPipeSpawnInterval, 0.8); // Límite inferior para el intervalo (más frecuente)
             // currentPipeGap no se modifica
             
             console.log(`Dificultad Progresiva Aumentada: G=${currentGravity.toFixed(3)}, Speed=${currentPipeSpeed.toFixed(2)}, Spawn=${currentPipeSpawnInterval.toFixed(2)}s`);
@@ -376,7 +374,7 @@
             } else {
                 ctx.fillStyle = '#70c5ce'; 
                 ctx.fillRect(0,0, canvas.width, canvas.height - groundHeight);
-                drawGenericFallback(0, 0, canvas.width, canvas.height - groundHeight, '#70c5ce', 'F');
+                // No dibujar texto "F" aquí para que sea solo el color de fondo
             }
         }
         
@@ -393,10 +391,15 @@
             pipeSpawnTimer += deltaTime;
             if (pipeSpawnTimer >= currentPipeSpawnInterval) {
                 pipeSpawnTimer = 0; 
-                let minTopHeight = 80;
-                let maxTopHeightPossible = canvas.height - groundHeight - currentPipeGap - 80; 
-                if (maxTopHeightPossible < minTopHeight) maxTopHeightPossible = minTopHeight + 10; 
-                let topHeight = Math.random() * (maxTopHeightPossible - minTopHeight) + minTopHeight;
+                // Ajuste para mayor variación vertical del hueco
+                let minPossibleTop = 50; // Altura mínima a la que puede empezar el borde superior de la tubería superior
+                let maxPossibleTop = canvas.height - groundHeight - currentPipeGap - 50; // Deja 50px para la tubería inferior
+
+                if (maxPossibleTop < minPossibleTop) { // Asegurar que haya rango
+                    maxPossibleTop = minPossibleTop + 20; // Un rango mínimo si los cálculos dan problemas
+                }
+                
+                let topHeight = Math.random() * (maxPossibleTop - minPossibleTop) + minPossibleTop;
                 pipes.push({ x: canvas.width, topHeight: topHeight, passed: false });
             }
 
@@ -461,10 +464,11 @@
 
         function updateGround(deltaTime) { 
             groundX -= currentPipeSpeed * TARGET_FPS * deltaTime; 
-            if (groundImg.complete && groundImg.naturalWidth > 0 && groundImg.width > 0) {
-                if (groundX <= -groundImg.width) { groundX += groundImg.width; }
-            } else {
-                if (groundX <= -canvas.width) { groundX += canvas.width; }
+            const groundAsset = assetList.find(a => a.name === 'groundImg');
+            let effectiveGroundWidth = (groundAsset.img.complete && groundAsset.img.naturalWidth > 0) ? groundAsset.img.width : canvas.width;
+            
+            if (groundX <= -effectiveGroundWidth) { 
+                groundX += effectiveGroundWidth; 
             }
         }
 
@@ -485,21 +489,23 @@
             pauseButton.style.display = 'none'; 
         }
         function drawGroundStatic() { 
-            if (groundImg.complete && groundImg.naturalWidth > 0 && groundImg.width > 0) {
-                 for (let i = 0; (i * groundImg.width) < canvas.width + groundImg.width; i++) {
-                    ctx.drawImage(groundImg, (i * groundImg.width), canvas.height - groundHeight, groundImg.width, groundHeight);
+            const asset = assetList.find(a => a.name === 'groundImg');
+            if (asset.img.complete && asset.img.naturalWidth > 0 && asset.img.width > 0) {
+                 for (let i = 0; (i * asset.img.width) < canvas.width + asset.img.width; i++) {
+                    ctx.drawImage(asset.img, (i * asset.img.width), canvas.height - groundHeight, asset.img.width, groundHeight);
                 }
             } else { 
-                drawGenericFallback(0, canvas.height - groundHeight, canvas.width, groundHeight, '#A0522D', 'S');
+                drawGenericFallback(0, canvas.height - groundHeight, canvas.width, groundHeight, asset.fallbackColor, asset.fallbackText);
             }
         }
         function drawBackgroundStatic() {   
-            if (bgImg.complete && bgImg.naturalWidth > 0 && bgImg.width > 0) {
-                 for (let i = 0; (i * bgImg.width) < canvas.width + bgImg.width; i++) {
-                    ctx.drawImage(bgImg, (i * bgImg.width) , 0, bgImg.width, canvas.height - groundHeight);
+            const asset = assetList.find(a => a.name === 'bgImg');
+            if (asset.img.complete && asset.img.naturalWidth > 0 && asset.img.width > 0) {
+                 for (let i = 0; (i * asset.img.width) < canvas.width + asset.img.width; i++) {
+                    ctx.drawImage(asset.img, (i * asset.img.width) , 0, asset.img.width, canvas.height - groundHeight);
                 }
             } else { 
-                drawGenericFallback(0, 0, canvas.width, canvas.height - groundHeight, '#70c5ce', 'F');
+                drawGenericFallback(0, 0, canvas.width, canvas.height - groundHeight, asset.fallbackColor, asset.fallbackText);
             }
         }
         function enterEndingSequence() {   
@@ -714,15 +720,15 @@
         pauseButton.addEventListener('click', (event) => { event.stopPropagation(); togglePause(); });
 
         // --- Carga de Assets e Inicio ---
-        const assetsToActuallyLoad = [
+        const assetsSrcs = [
             {img: motoFoxImg, src: './imagenes/motozorro.png', name: 'motoFoxImg'},
             {img: pipeTopImg, src: './imagenes/tuberia_arriba.svg', name: 'pipeTopImg'},
             {img: pipeBottomImg, src: './imagenes/tuberia_abajo.svg', name: 'pipeBottomImg'},
             {img: groundImg, src: './imagenes/suelo.svg', name: 'groundImg'},
             {img: bgImg, src: './imagenes/fondo_juego.svg', name: 'bgImg'},
-            {img: dancingFoxImg, src: dancingFoxImg.src, name: 'dancingFoxImg'} 
+            {img: dancingFoxImg, src: 'data:image/gif;base64,R0lGODlhIAAgAPIEAAAAAP/OAAAA/84A////AAAAACH/C05FVFNDQVBFMi4wAwEAAAAh+QQJFAACACwAAAAAIAAgAAADXei63P4wykmrvTjrzbv/YCiOZGmeaKqubOu+cCzPdG3feK7vfO//wKBwSCwaj8ikcslsOp/QqHRKrVqv2Kx2y+16v+CweEwum8/otHrNbrvf8Lh8Tq/b7/i8fs/v+/+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChooqMhR0AAAAh+QQJFAACACwEAAIAFwAWAAADQHi63P4wykmrvTjrzbv/YCiOZGmeaKqubOu+cCzPdG3feK7vfO//wKAwSBQeiEghlHMpyfE0pFQrjVLjB+xOq3f0mJxbM9oVAAA7', name: 'dancingFoxImg'} 
         ];
-        let totalAssetsToProcess = assetsToActuallyLoad.length;
+        let totalAssetsToProcess = assetsSrcs.length;
         let processedAssetCount = 0;
 
         function assetProcessed(assetName, success) {
@@ -736,39 +742,20 @@
             if (processedAssetCount >= totalAssetsToProcess) {
                 console.log("¡Procesamiento de todos los assets finalizado!"); 
                 gameState = 'DIFFICULTY_SELECTION';
-                difficultySelectionModal.style.display = 'flex';
+                difficultySelectionModal.style.display = 'flex'; // Mostrar panel de dificultad
             }
         }
 
-        assetsToActuallyLoad.forEach(assetEntry => {
-            // Asignar src aquí para asegurar que los manejadores estén listos
-            // Esto ya se hace arriba para las imágenes no base64
-            if (assetEntry.name === 'dancingFoxImg') { // Caso especial para el GIF base64
-                 if (assetEntry.img.complete && assetEntry.img.src.startsWith('data:image/gif')) {
-                    assetProcessed(assetEntry.name, true); 
-                } else {
-                    assetEntry.img.onload = () => assetProcessed(assetEntry.name, true);
-                    assetEntry.img.onerror = () => assetProcessed(assetEntry.name, false);
-                }
-            } else {
-                 if (assetEntry.img.complete && assetEntry.img.naturalWidth !== undefined && assetEntry.img.naturalWidth !== 0) {
-                     assetProcessed(assetEntry.name, true);
-                } else {
-                    assetEntry.img.onload = () => assetProcessed(assetEntry.name, true);
-                    assetEntry.img.onerror = () => {
-                        console.error(`Error al cargar la imagen: ${assetEntry.src}. Los fallbacks en canvas se usarán.`);
-                        assetProcessed(assetEntry.name, false); 
-                    };
-                }
-            }
-             // Asignar src si aún no lo tiene (para las imágenes no base64, ya se hizo arriba)
-             // Esto es redundante si el src se asignó al crear el objeto Image, pero no hace daño.
-            if (!assetEntry.img.src) {
-                assetEntry.img.src = assetEntry.src;
-            }
+        assetsSrcs.forEach(assetEntry => {
+            assetEntry.img.onload = () => assetProcessed(assetEntry.name, true);
+            assetEntry.img.onerror = () => {
+                console.error(`Error al cargar la imagen: ${assetEntry.src}. Los fallbacks en canvas se usarán.`);
+                assetProcessed(assetEntry.name, false); 
+            };
+            // Asignar el src aquí para iniciar la carga DESPUÉS de asignar onload/onerror
+            assetEntry.img.src = assetEntry.src; 
         });
         
-        // Iniciar el bucle del juego inmediatamente para manejar el estado LOADING_ASSETS
         requestAnimationFrame(gameLoop);
 
     </script>
