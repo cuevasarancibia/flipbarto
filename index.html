@@ -22,13 +22,13 @@
             border: 2px solid #000;
             overflow: hidden;
             box-shadow: 0 0 10px rgba(0,0,0,0.5);
-            background-color: #70c5ce; /* Fondo por si el canvas tarda */
+            background-color: #70c5ce; /* Fondo inicial */
         }
         canvas {
             display: block;
-            background-color: transparent;
+            background-color: transparent; 
         }
-        .game-ui-element {
+        .game-ui-element { 
             position: absolute;
             left: 50%;
             transform: translateX(-50%);
@@ -41,7 +41,6 @@
             top: 20px;
             font-size: 30px;
             font-weight: bold;
-            display: none; /* Oculto inicialmente */
         }
         #messageDisplay {
             top: 40%;
@@ -55,8 +54,9 @@
             box-sizing: border-box;
         }
         #finalVictoryMessage { 
-            top: 0; left: 0;
-            width: 100%; height: 100%;
+            top: 0; left: 0; 
+            width: 100%;
+            height: 100%;
             background-color: rgba(0, 85, 120, 0.9); 
             z-index: 25; 
             display: none;
@@ -84,7 +84,7 @@
             border-radius: 5px;
             cursor: pointer;
             z-index: 11;
-            display: none; /* Oculto inicialmente */
+            display: flex; 
             justify-content: center;
             align-items: center;
         }
@@ -105,13 +105,12 @@
         }
         #answerButtonsContainer button:hover { background-color: #45a049; }
 
-        /* Panel de Selección de Dificultad */
         #difficultySelectionModal {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(0, 0, 0, 0.9);
-            z-index: 30; /* Encima de todo al inicio */
-            display: flex; /* Se mostrará por JS después de cargar assets */
+            z-index: 30; 
+            display: none; /* Se mostrará después de cargar assets */
             flex-direction: column;
             justify-content: center;
             align-items: center;
@@ -136,26 +135,26 @@
 </head>
 <body>
     <div id="gameContainer">
-        <div id="difficultySelectionModal" style="display:none;"> {/* Se mostrará por JS */}
+        <div id="difficultySelectionModal">
             <h2>Selecciona la Dificultad</h2>
             <label for="difficultySlider">Nivel de Dificultad: <span id="difficultyValue">5</span></label>
             <input type="range" id="difficultySlider" min="1" max="10" value="5">
             
             <div class="checkbox-container">
                 <input type="checkbox" id="progressiveDifficultyCheckbox">
-                <label for="progressiveDifficultyCheckbox">Dificultad en Crecimiento</label>
+                <label for="progressiveDifficultyCheckbox">Dificultad en Crecimiento (cada 3 puntos)</label>
             </div>
 
             <button id="startGameButton">Iniciar Juego</button>
         </div>
 
         <canvas id="gameCanvas"></canvas>
-        <div id="scoreDisplay" class="game-ui-element">0</div>
-        <div id="messageDisplay" class="game-ui-element"></div>
+        <div id="scoreDisplay" class="game-ui-element" style="display: none;">0</div>
+        <div id="messageDisplay" class="game-ui-element"></div> 
         <div id="finalVictoryMessage" class="game-ui-element"> ¡Eres lo mejor que hay, muchas gracias!!<br>¡GANASTE!
             <br><small>Pulsa para jugar de nuevo</small>
         </div>
-        <div id="pauseButton"></div>
+        <div id="pauseButton" style="display: none;"></div> 
         <div id="questionModal">
             <div id="questionText"></div>
             <div id="answerButtonsContainer"></div>
@@ -173,43 +172,37 @@
         const questionModal = document.getElementById('questionModal');
         const questionText = document.getElementById('questionText');
         const answerButtonsContainer = document.getElementById('answerButtonsContainer');
-        
-        // Elementos del Panel de Dificultad
         const difficultySelectionModal = document.getElementById('difficultySelectionModal');
         const difficultySlider = document.getElementById('difficultySlider');
         const difficultyValueDisplay = document.getElementById('difficultyValue');
         const progressiveDifficultyCheckbox = document.getElementById('progressiveDifficultyCheckbox');
         const startGameButton = document.getElementById('startGameButton');
 
-        canvas.width = 320;
-        canvas.height = 480;
+        canvas.width = 320; canvas.height = 480;
 
-        // --- ASSETS (Imágenes) ---
-        // Mantenemos la forma de cargar imágenes del código "que funcionaba"
-        const motoFoxImg = new Image(); motoFoxImg.src = './imagenes/motozorro.png';
-        const pipeTopImg = new Image(); pipeTopImg.src = './imagenes/tuberia_arriba.svg';
-        const pipeBottomImg = new Image(); pipeBottomImg.src = './imagenes/tuberia_abajo.svg';
-        const groundImg = new Image(); groundImg.src = './imagenes/suelo.svg';
-        const bgImg = new Image(); bgImg.src = './imagenes/fondo_juego.svg';
-        const dancingFoxImg = new Image(); dancingFoxImg.src = 'data:image/gif;base64,R0lGODlhIAAgAPIEAAAAAP/OAAAA/84A////AAAAACH/C05FVFNDQVBFMi4wAwEAAAAh+QQJFAACACwAAAAAIAAgAAADXei63P4wykmrvTjrzbv/YCiOZGmeaKqubOu+cCzPdG3feK7vfO//wKBwSCwaj8ikcslsOp/QqHRKrVqv2Kx2y+16v+CweEwum8/otHrNbrvf8Lh8Tq/b7/i8fs/v+/+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChooqMhR0AAAAh+QQJFAACACwEAAIAFwAWAAADQHi63P4wykmrvTjrzbv/YCiOZGmeaKqubOu+cCzPdG3feK7vfO//wKAwSBQeiEghlHMpyfE0pFQrjVLjB+xOq3f0mJxbM9oVAAA7';
+        // --- ASSETS ---
+        const motoFoxImg = new Image();
+        const pipeTopImg = new Image();
+        const pipeBottomImg = new Image();
+        const groundImg = new Image();
+        const bgImg = new Image();
+        const dancingFoxImg = new Image(); 
 
         // --- Variables del Juego ---
         let motoX, motoY, motoVelocity, motoSize;
-        let gravity, currentGravity; // current para dificultad progresiva
+        let gravity, currentGravity; 
         let pipes;
         let pipeWidth, pipeGap, currentPipeGap;
         let pipeOriginalSpeed, currentPipeSpeed;
         let score;
-        let gameState = 'LOADING_ASSETS'; // Estado inicial para carga de assets
+        let gameState = 'LOADING_ASSETS'; // Estado inicial
         let isPaused = false;
         let groundHeight = 50;
         let groundX = 0;
 
-        // --- Variables para Delta Time ---
         let lastTime = 0;
         const TARGET_FPS = 60;
 
-        // --- Variables para el Sistema de Preguntas ---
         let isAnsweringQuestion = false;
         let currentQuestionData = null;
         const questions = [ 
@@ -231,98 +224,93 @@
         let milestonesReached = [];
         let lastScoreThatTriggeredQuestion = 0;
         
-        // --- Variables de Dificultad ---
-        let currentDifficultyLevel = 5; // Nivel por defecto que mostrará el slider
+        let currentDifficultyLevel = 5; 
         let progressiveDifficultyEnabled = false;
         let lastDifficultyIncreaseScore = 0;
         let pipeSpawnTimer = 0;
-        let PIPE_SPAWN_INTERVAL, currentPipeSpawnInterval; // Se establecerá en applyDifficultySettings
+        let PIPE_SPAWN_INTERVAL, currentPipeSpawnInterval; 
 
-        const difficultyParams = { // Rangos de parámetros de dificultad (Nivel 1 a Nivel 10)
+        const difficultyParams = {
             gravity:           { min: 0.04, max: 0.20 }, 
             pipeSpeed:         { min: 0.7,  max: 3.5  }, 
             pipeSpawnInterval: { min: 4.0,  max: 1.0  }, 
             pipeGap:           { min: 250,  max: 110  }  
         };
 
+        // --- Lista de Assets para Cargar ---
+        const assetList = [
+            {img: motoFoxImg,    src: './imagenes/motozorro.png',        placeholder: 'https://placehold.co/40x40/FFA500/FFFFFF?text=Z', name: 'motoFoxImg', fallbackColor: 'orange', fallbackText: 'Z'},
+            {img: pipeTopImg,    src: './imagenes/tuberia_arriba.svg',   placeholder: 'https://placehold.co/64x200/008000/FFFFFF?text=T', name: 'pipeTopImg', fallbackColor: 'green', fallbackText: 'T'},
+            {img: pipeBottomImg, src: './imagenes/tuberia_abajo.svg',  placeholder: 'https://placehold.co/64x200/008000/FFFFFF?text=T', name: 'pipeBottomImg', fallbackColor: 'green', fallbackText: 'T'},
+            {img: groundImg,     src: './imagenes/suelo.svg',            placeholder: `https://placehold.co/${canvas.width}x${groundHeight}/D2B48C/000000?text=S`, name: 'groundImg', fallbackColor: '#A0522D', fallbackText: 'S'}, 
+            {img: bgImg,         src: './imagenes/fondo_juego.svg',      placeholder: `https://placehold.co/${canvas.width}x${canvas.height - groundHeight}/70C5CE/FFFFFF?text=F`, name: 'bgImg', fallbackColor: '#87CEEB', fallbackText: 'F'} 
+        ];
+        let assetsToLoadCount = assetList.length + 1; // +1 para el GIF de dancingFox
+        let assetsLoadedCount = 0;
+
+
         function applyDifficultySettings(level) {
             const factor = (level - 1) / 9; 
-
             gravity = difficultyParams.gravity.min + (difficultyParams.gravity.max - difficultyParams.gravity.min) * factor;
             pipeOriginalSpeed = difficultyParams.pipeSpeed.min + (difficultyParams.pipeSpeed.max - difficultyParams.pipeSpeed.min) * factor;
             PIPE_SPAWN_INTERVAL = difficultyParams.pipeSpawnInterval.max - (difficultyParams.pipeSpawnInterval.max - difficultyParams.pipeSpawnInterval.min) * factor; 
             pipeGap = difficultyParams.pipeGap.max - (difficultyParams.pipeGap.max - difficultyParams.pipeGap.min) * factor; 
-
-            // Estos serán los valores que usará el juego
             currentGravity = gravity;
             currentPipeSpeed = pipeOriginalSpeed;
             currentPipeSpawnInterval = PIPE_SPAWN_INTERVAL;
             currentPipeGap = pipeGap;
-
-            console.log(`Dificultad Nivel ${level}: G=${currentGravity.toFixed(3)}, Speed=${currentPipeSpeed.toFixed(2)}, Spawn=${currentPipeSpawnInterval.toFixed(2)}s, Gap=${currentPipeGap.toFixed(0)}px`);
+            console.log(`Dificultad Nivel ${level}: G=${gravity.toFixed(3)}, Speed=${pipeOriginalSpeed.toFixed(2)}, Spawn=${PIPE_SPAWN_INTERVAL.toFixed(2)}s, Gap=${pipeGap.toFixed(0)}px`);
         }
 
         function increaseDifficultyStep() {
-            // Aumentar dificultad progresivamente (ajustes pequeños)
-            currentGravity = Math.min(difficultyParams.gravity.max, currentGravity + 0.003); 
-            currentPipeSpeed = Math.min(difficultyParams.pipeSpeed.max, currentPipeSpeed + 0.08);   
-            if (currentPipeSpawnInterval > difficultyParams.pipeSpawnInterval.max) currentPipeSpawnInterval -= 0.04; // Con límite inferior
-            if (currentPipeGap > difficultyParams.pipeGap.max) currentPipeGap -= 2; // Con límite inferior
-            
+            currentGravity += 0.003; 
+            currentPipeSpeed += 0.08;   
+            if (currentPipeSpawnInterval > 0.8) currentPipeSpawnInterval -= 0.04; 
+            if (currentPipeGap > 100) currentPipeGap -= 2; 
             console.log(`Dificultad Progresiva: G=${currentGravity.toFixed(3)}, Speed=${currentPipeSpeed.toFixed(2)}, Spawn=${currentPipeSpawnInterval.toFixed(2)}s, Gap=${currentPipeGap.toFixed(0)}px`);
         }
-        
-        // init() ahora establece el estado base del juego, usando la dificultad ya configurada
-        function init() {
+
+        function initGameLogic() { 
             motoSize = 40; motoX = 60; motoY = canvas.height / 2 - motoSize / 2;
             motoVelocity = 0; 
-            // La gravedad, velocidad de tuberías, etc., ya están en currentGravity, currentPipeSpeed...
             pipes = []; pipeWidth = 64; 
-            // pipeGap y PIPE_SPAWN_INTERVAL se usan desde currentPipeGap y currentPipeSpawnInterval
             score = 0; 
-            // gameState se maneja fuera para el flujo inicial
             isPaused = false; 
             isAnsweringQuestion = false; questionModal.style.display = 'none';
             finalVictoryMessageDisplay.style.display = 'none'; 
-            
+            messageDisplay.style.display = 'none'; 
+            scoreDisplay.style.display = 'block'; 
+            pauseButton.style.display = 'flex';   
             availableQuestions = [...questions]; 
             questionsAnsweredCorrectlyThisSession = 0; 
             milestonesReached = [];
             lastScoreThatTriggeredQuestion = 0;
-            lastDifficultyIncreaseScore = 0; // Para dificultad progresiva
+            lastDifficultyIncreaseScore = 0; 
             pipeSpawnTimer = currentPipeSpawnInterval; 
-
             lastTime = 0; 
-
             updatePauseButtonIcon();
             scoreDisplay.textContent = score;
-            scoreDisplay.style.display = 'block';
-            pauseButton.style.display = 'flex';
-            // El mensaje "Pulsa para empezar" se controla desde el botón de inicio de dificultad
         }
 
-        // --- Eventos del Panel de Dificultad ---
         difficultySlider.addEventListener('input', (e) => {
             currentDifficultyLevel = parseInt(e.target.value);
             difficultyValueDisplay.textContent = currentDifficultyLevel;
         });
 
         startGameButton.addEventListener('click', () => {
-            applyDifficultySettings(currentDifficultyLevel); // Aplica la dificultad base
+            applyDifficultySettings(currentDifficultyLevel);
             progressiveDifficultyEnabled = progressiveDifficultyCheckbox.checked;
-            
             difficultySelectionModal.style.display = 'none'; 
             gameState = 'READY'; 
             messageDisplay.innerHTML = 'Pulsa o haz clic<br>para Empezar la Aventura';
             messageDisplay.style.display = 'block';
-            messageDisplay.style.top = '40%'; // Centrar mensaje de inicio
         });
-
+        
         function drawGenericFallback(x, y, width, height, color, text) {
             ctx.fillStyle = color;
             ctx.fillRect(x, y, width, height);
-            ctx.fillStyle = 'black'; // Texto negro para contraste
-            ctx.font = 'bold 14px Arial';
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 16px Arial';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText(text, x + width / 2, y + height / 2);
@@ -332,50 +320,52 @@
             ctx.save();
             ctx.translate(motoX + motoSize / 2, motoY + motoSize / 2);
             let angle = Math.min(Math.PI / 8, motoVelocity * 0.08); ctx.rotate(angle);
-            if (motoFoxImg.complete && motoFoxImg.naturalWidth > 0) {
-                ctx.drawImage(motoFoxImg, -motoSize / 2, -motoSize / 2, motoSize, motoSize);
+            const asset = assetList.find(a => a.name === 'motoFoxImg');
+            if (asset.img.complete && asset.img.naturalWidth > 0) {
+                ctx.drawImage(asset.img, -motoSize / 2, -motoSize / 2, motoSize, motoSize);
             } else {
-                drawGenericFallback(-motoSize / 2, -motoSize / 2, motoSize, motoSize, 'orange', 'Z');
+                drawGenericFallback(-motoSize / 2, -motoSize / 2, motoSize, motoSize, asset.fallbackColor, asset.fallbackText);
             }
             ctx.restore();
         }
         function drawPipes() { 
+            const assetTop = assetList.find(a => a.name === 'pipeTopImg');
+            const assetBottom = assetList.find(a => a.name === 'pipeBottomImg');
             pipes.forEach(pipe => {
-                if (pipeTopImg.complete && pipeTopImg.naturalWidth > 0) {
-                    ctx.drawImage(pipeTopImg, pipe.x, 0, pipeWidth, pipe.topHeight);
+                if (assetTop.img.complete && assetTop.img.naturalWidth > 0) {
+                    ctx.drawImage(assetTop.img, pipe.x, 0, pipeWidth, pipe.topHeight);
                 } else { 
-                    drawGenericFallback(pipe.x, 0, pipeWidth, pipe.topHeight, 'green', 'T');
+                    drawGenericFallback(pipe.x, 0, pipeWidth, pipe.topHeight, assetTop.fallbackColor, assetTop.fallbackText);
                 }
-                if (pipeBottomImg.complete && pipeBottomImg.naturalWidth > 0) {
-                    ctx.drawImage(pipeBottomImg, pipe.x, pipe.topHeight + currentPipeGap, pipeWidth, canvas.height - pipe.topHeight - currentPipeGap - groundHeight);
+                if (assetBottom.img.complete && assetBottom.img.naturalWidth > 0) {
+                    ctx.drawImage(assetBottom.img, pipe.x, pipe.topHeight + currentPipeGap, pipeWidth, canvas.height - pipe.topHeight - currentPipeGap - groundHeight);
                 } else { 
-                    drawGenericFallback(pipe.x, pipe.topHeight + currentPipeGap, pipeWidth, canvas.height - pipe.topHeight - currentPipeGap - groundHeight, 'darkgreen', 'T');
+                    drawGenericFallback(pipe.x, pipe.topHeight + currentPipeGap, pipeWidth, canvas.height - pipe.topHeight - currentPipeGap - groundHeight, assetBottom.fallbackColor, assetBottom.fallbackText);
                 }
             });
         }
         function drawGround() { 
-            if (groundImg.complete && groundImg.naturalWidth > 0 && groundImg.width > 0) {
-                 for (let i = 0; (i * groundImg.width) + groundX < canvas.width + groundImg.width; i++) {
-                    ctx.drawImage(groundImg, (i * groundImg.width) + groundX, canvas.height - groundHeight, groundImg.width, groundHeight);
+            const asset = assetList.find(a => a.name === 'groundImg');
+            if (asset.img.complete && asset.img.naturalWidth > 0 && asset.img.width > 0) {
+                 for (let i = 0; (i * asset.img.width) + groundX < canvas.width + asset.img.width; i++) {
+                    ctx.drawImage(asset.img, (i * asset.img.width) + groundX, canvas.height - groundHeight, asset.img.width, groundHeight);
                 }
             } else {
                  for (let i = 0; (i * canvas.width) + groundX < canvas.width + canvas.width; i++) { 
-                    drawGenericFallback((i * canvas.width) + groundX, canvas.height - groundHeight, canvas.width, groundHeight, '#A0522D', 'S');
+                    drawGenericFallback((i * canvas.width) + groundX, canvas.height - groundHeight, canvas.width, groundHeight, asset.fallbackColor, asset.fallbackText);
                  }
             }
         }
         function drawBackground() { 
-            if (bgImg.complete && bgImg.naturalWidth > 0 && bgImg.width > 0) { 
-                 for (let i = 0; (i * bgImg.width) + (groundX * 0.5) < canvas.width + bgImg.width; i++) {
-                    let bgX = (i * bgImg.width) + (groundX * 0.5);
-                    while (bgX <= -bgImg.width && bgImg.width > 0) { bgX += bgImg.width; }
-                    ctx.drawImage(bgImg, bgX , 0, bgImg.width, canvas.height - groundHeight);
+            const asset = assetList.find(a => a.name === 'bgImg');
+            if (asset.img.complete && asset.img.naturalWidth > 0 && asset.img.width > 0) { 
+                 for (let i = 0; (i * asset.img.width) + (groundX * 0.5) < canvas.width + asset.img.width; i++) {
+                    let bgX = (i * asset.img.width) + (groundX * 0.5);
+                    while (bgX <= -asset.img.width && asset.img.width > 0) { bgX += asset.img.width; }
+                    ctx.drawImage(asset.img, bgX , 0, asset.img.width, canvas.height - groundHeight);
                 }
             } else {
-                // Dibuja un color de fondo si la imagen no carga
-                ctx.fillStyle = '#70c5ce'; // Color cielo del body
-                ctx.fillRect(0,0, canvas.width, canvas.height - groundHeight);
-                drawGenericFallback(0, 0, canvas.width, canvas.height - groundHeight, '#70c5ce', 'F');
+                drawGenericFallback(0, 0, canvas.width, canvas.height - groundHeight, asset.fallbackColor, asset.fallbackText);
             }
         }
         
@@ -388,398 +378,4 @@
             }
         }
 
-        function updatePipes(deltaTime) { 
-            pipeSpawnTimer += deltaTime;
-            if (pipeSpawnTimer >= currentPipeSpawnInterval) {
-                pipeSpawnTimer = 0; 
-                let minTopHeight = 80;
-                let maxTopHeightPossible = canvas.height - groundHeight - currentPipeGap - 80;
-                if (maxTopHeightPossible < minTopHeight) maxTopHeightPossible = minTopHeight + 10; 
-                let topHeight = Math.random() * (maxTopHeightPossible - minTopHeight) + minTopHeight;
-                pipes.push({ x: canvas.width, topHeight: topHeight, passed: false });
-            }
-
-            pipes.forEach(pipe => {
-                pipe.x -= currentPipeSpeed * TARGET_FPS * deltaTime; 
-                if (pipe.x + pipeWidth < 0) { pipes.shift(); }
-
-                if (!pipe.passed && pipe.x + pipeWidth < motoX) {
-                    pipe.passed = true;
-                    score++;
-                    scoreDisplay.textContent = score;
-
-                    if (progressiveDifficultyEnabled && score > 0 && score % 3 === 0 && score !== lastDifficultyIncreaseScore) {
-                        increaseDifficultyStep();
-                        lastDifficultyIncreaseScore = score;
-                    }
-
-                    let questionShouldBeTriggered = false;
-                    for (let i = 0; i < questionMilestones.length; i++) {
-                        const milestone = questionMilestones[i];
-                        if (score === milestone && !milestonesReached.includes(milestone)) {
-                            questionShouldBeTriggered = true;
-                            milestonesReached.push(milestone);
-                            break; 
-                        }
-                    }
-                    if (!questionShouldBeTriggered && score > 20 && score % 5 === 0) {
-                        if (!milestonesReached.includes(score) && score !== lastScoreThatTriggeredQuestion) {
-                            questionShouldBeTriggered = true;
-                        }
-                    }
-                    if (questionShouldBeTriggered) {
-                        if (!isAnsweringQuestion && gameState === 'PLAYING') {
-                            triggerQuestion();
-                            lastScoreThatTriggeredQuestion = score;
-                        }
-                    }
-                    
-                    if (!isAnsweringQuestion && gameState !== 'FINAL_VICTORY') { 
-                         if (score === 9999 && gameState !== 'ENDING') { 
-                            enterEndingSequence();
-                        }
-                    }
-                }
-            });
-        }
-
-        function checkCollisions() {   
-            if (gameState !== 'PLAYING' || isAnsweringQuestion) return;
-            if (motoY + motoSize > canvas.height - groundHeight) {
-                motoY = canvas.height - groundHeight - motoSize;
-                gameOver("¡Caíste al suelo!"); return;
-            }
-            for (let pipe of pipes) {
-                const m = 2; 
-                if (motoX + motoSize - m > pipe.x && motoX + m < pipe.x + pipeWidth &&
-                    (motoY + m < pipe.topHeight || motoY + motoSize - m > pipe.topHeight + currentPipeGap)) { 
-                    gameOver("¡Chocaste con una tubería!"); return;
-                }
-            }
-        }
-
-        function updateGround(deltaTime) { 
-            groundX -= currentPipeSpeed * TARGET_FPS * deltaTime; 
-            if (groundImg.complete && groundImg.naturalWidth > 0 && groundImg.width > 0) {
-                if (groundX <= -groundImg.width) { groundX += groundImg.width; }
-            } else {
-                if (groundX <= -canvas.width) { groundX += canvas.width; }
-            }
-        }
-
-        function flap() { 
-            if (gameState === 'PLAYING' && !isPaused && !isAnsweringQuestion) {
-                motoVelocity = -2.8; 
-            }
-        }
-        function gameOver(reason = "¡Oh no, Zorro!") { 
-            if (gameState === 'GAMEOVER' || gameState === 'ENDING' || gameState === 'FINAL_VICTORY') return;
-            gameState = 'GAMEOVER'; 
-            isPaused = true; 
-            messageDisplay.innerHTML = `${reason}<br>Puntuación Final: ${score}<br><small>Pulsa para reintentar</small>`;
-            messageDisplay.style.top = '40%'; messageDisplay.style.display = 'block';
-            questionModal.style.display = 'none';
-            finalVictoryMessageDisplay.style.display = 'none'; 
-            scoreDisplay.style.display = 'none'; // Ocultar score en game over antes de ir a dificultad
-            pauseButton.style.display = 'none'; // Ocultar pausa
-        }
-        function drawGroundStatic() { 
-            if (groundImg.complete && groundImg.naturalWidth > 0 && groundImg.width > 0) {
-                 for (let i = 0; (i * groundImg.width) < canvas.width + groundImg.width; i++) {
-                    ctx.drawImage(groundImg, (i * groundImg.width), canvas.height - groundHeight, groundImg.width, groundHeight);
-                }
-            } else { 
-                drawGenericFallback(0, canvas.height - groundHeight, canvas.width, groundHeight, '#A0522D', 'S');
-            }
-        }
-        function drawBackgroundStatic() {   
-            if (bgImg.complete && bgImg.naturalWidth > 0 && bgImg.width > 0) {
-                 for (let i = 0; (i * bgImg.width) < canvas.width + bgImg.width; i++) {
-                    ctx.drawImage(bgImg, (i * bgImg.width) , 0, bgImg.width, canvas.height - groundHeight);
-                }
-            } else { 
-                drawGenericFallback(0, 0, canvas.width, canvas.height - groundHeight, '#70c5ce', 'F');
-            }
-        }
-        function enterEndingSequence() {   
-            if (gameState === 'FINAL_VICTORY') return; 
-            gameState = 'ENDING'; pipes = [];
-            motoX = canvas.width / 2 - motoSize / 2; motoY = canvas.height - groundHeight - motoSize - 10;
-            motoVelocity = 0; messageDisplay.innerHTML = `¡FIN DE LA AVENTURA!`;
-            messageDisplay.style.top = '30%'; messageDisplay.style.display = 'block';
-            pauseButton.style.display = 'none';
-        }
-        function drawEndingSequence() { 
-            ctx.fillStyle = '#303030'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#505050';
-            for(let y=0; y<canvas.height; y+=20) for(let x=(y/20)%2===0?0:-10; x<canvas.width; x+=40) ctx.fillRect(x,y,38,18);
-            ctx.fillStyle = '#404040'; ctx.fillRect(0, canvas.height - groundHeight + 10, canvas.width, groundHeight-10);
-            const dFS = 64;
-            if (dancingFoxImg.complete && dancingFoxImg.naturalWidth > 0) {
-                 ctx.drawImage(dancingFoxImg, canvas.width/2 - dFS/2, canvas.height - groundHeight - dFS + 10, dFS, dFS);
-            } else { ctx.fillStyle = 'orange'; ctx.fillRect(canvas.width/2 - motoSize/2, canvas.height - groundHeight - motoSize + 10, motoSize, motoSize); }
-            ctx.fillStyle='orange'; ctx.fillRect(canvas.width*0.2-5,canvas.height*0.6-10,10,20); ctx.fillStyle='red'; ctx.beginPath(); ctx.arc(canvas.width*0.2,canvas.height*0.6-15,7,0,Math.PI*2); ctx.fill();
-            ctx.fillStyle='orange'; ctx.fillRect(canvas.width*0.8-5,canvas.height*0.6-10,10,20); ctx.fillStyle='red'; ctx.beginPath(); ctx.arc(canvas.width*0.8,canvas.height*0.6-15,7,0,Math.PI*2); ctx.fill();
-            scoreDisplay.textContent = '9999';
-        }
-        function showFinalVictory() { 
-            gameState = 'FINAL_VICTORY';
-            isPaused = true;
-            questionModal.style.display = 'none';
-            messageDisplay.style.display = 'none';
-            finalVictoryMessageDisplay.style.display = 'flex';
-            pauseButton.style.display = 'none'; 
-            scoreDisplay.style.display = 'none';
-        }
-        function triggerQuestion() { 
-            if (availableQuestions.length === 0) { 
-                console.log("Se intentó disparar pregunta, pero ya no hay disponibles.");
-                if (gameState !== 'FINAL_VICTORY') { 
-                     showFinalVictory();
-                }
-                return; 
-            }
-            if (isAnsweringQuestion || gameState !== 'PLAYING') return;
-
-            isAnsweringQuestion = true; isPaused = true;
-            updatePauseButtonIcon();
-
-            const questionIndex = Math.floor(Math.random() * availableQuestions.length);
-            currentQuestionData = availableQuestions.splice(questionIndex, 1)[0]; 
-
-            questionText.textContent = currentQuestionData.text;
-            answerButtonsContainer.innerHTML = ''; 
-
-            currentQuestionData.options.forEach((option, index) => {
-                const button = document.createElement('button');
-                button.textContent = option;
-                button.onclick = () => selectAnswer(index);
-                answerButtonsContainer.appendChild(button);
-            });
-            questionModal.style.display = 'flex';
-        }
-        function selectAnswer(selectedIndex) { 
-            if (!currentQuestionData) return;
-
-            if (selectedIndex === currentQuestionData.correctAnswerIndex) {
-                questionsAnsweredCorrectlyThisSession++; 
-                
-                if (availableQuestions.length === 0 && questionsAnsweredCorrectlyThisSession === totalQuestionsInGame) {
-                    questionModal.style.display = 'none'; 
-                    showFinalVictory();
-                } else {
-                    messageDisplay.innerHTML = "¡Correcto!<br>Continúa la aventura.";
-                    messageDisplay.style.display = 'block';
-                    setTimeout(() => {
-                        messageDisplay.style.display = 'none';
-                        isAnsweringQuestion = false; isPaused = false;
-                        updatePauseButtonIcon(); questionModal.style.display = 'none';
-                    }, 1500);
-                }
-            } else {
-                questionModal.style.display = 'none'; 
-                gameOver("¡Respuesta incorrecta!"); 
-            }
-            currentQuestionData = null;
-        }
-        
-        function gameLoop(timestamp) {
-            if (gameState === 'LOADING_ASSETS') {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.fillStyle = "white";
-                ctx.font = "20px Arial";
-                ctx.textAlign = "center";
-                ctx.fillText("Cargando Assets...", canvas.width / 2, canvas.height / 2);
-                requestAnimationFrame(gameLoop);
-                return;
-            }
-            if (gameState === 'DIFFICULTY_SELECTION') { 
-                requestAnimationFrame(gameLoop);
-                return;
-            }
-
-            if (lastTime === 0 && gameState !== 'READY') { 
-                 lastTime = timestamp;
-            } else if (gameState === 'READY') { 
-                lastTime = 0; 
-            }
-
-            let deltaTime = 0;
-            if (lastTime !== 0 && gameState === 'PLAYING') { // Solo calcular deltaTime si estamos jugando y lastTime es válido
-                deltaTime = (timestamp - lastTime) / 1000;
-            }
-            lastTime = timestamp;
-            deltaTime = Math.min(deltaTime, 0.1); // Cap deltaTime
-
-            if (gameState === 'FINAL_VICTORY') {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                drawBackgroundStatic(); 
-                drawGroundStatic();     
-                requestAnimationFrame(gameLoop);
-                return; 
-            }
-
-            // Dibujar solo si no está pausado O si está en READY (para mostrar el fondo inicial)
-            if (!isPaused || gameState === 'READY') { 
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                if (gameState === 'ENDING') { 
-                    drawEndingSequence(); 
-                } else if (gameState === 'READY') {
-                    drawBackgroundStatic(); 
-                    drawGroundStatic();
-                    // El messageDisplay para "Pulsa para Empezar" ya está visible
-                } else if (gameState === 'PLAYING') { 
-                    drawBackground(); 
-                    drawPipes(); 
-                    drawGround(); 
-                    drawMoto();
-                    if (!isAnsweringQuestion) { // No actualizar lógica si se está respondiendo pregunta
-                        updateMoto(deltaTime); 
-                        updatePipes(deltaTime); 
-                        updateGround(deltaTime); 
-                        checkCollisions(); 
-                    }
-                }
-            }
-            requestAnimationFrame(gameLoop); 
-        }
-
-        function handleInput() {
-            if (isAnsweringQuestion && gameState !== 'GAMEOVER') return;
-            
-            if (gameState === 'FINAL_VICTORY' || gameState === 'GAMEOVER' || gameState === 'ENDING') { 
-                difficultySelectionModal.style.display = 'flex'; 
-                finalVictoryMessageDisplay.style.display = 'none';
-                messageDisplay.style.display = 'none'; 
-                scoreDisplay.style.display = 'none';
-                pauseButton.style.display = 'none';
-                gameState = 'DIFFICULTY_SELECTION'; 
-                return;
-            }
-            
-            if (isPaused && gameState !== 'READY') return; // No procesar input si está pausado (y no es GAMEOVER/READY)
-
-            if (gameState === 'READY') {
-                initGameLogic();  // Inicializa variables de juego con la dificultad ya establecida
-                gameState = 'PLAYING'; 
-                isPaused = false; 
-                messageDisplay.style.display = 'none'; 
-                lastTime = performance.now(); // Establecer lastTime justo antes de empezar a jugar
-                flap();
-            } else if (gameState === 'PLAYING' && !isPaused) { 
-                 flap(); 
-            }
-        }
-        
-        function togglePause() {
-            if (isAnsweringQuestion || gameState === 'ENDING' || gameState === 'GAMEOVER' || gameState === 'READY' || gameState === 'FINAL_VICTORY' || gameState === 'DIFFICULTY_SELECTION' || gameState === 'LOADING_ASSETS') return;
-            if (gameState === 'PLAYING' || gameState === 'PAUSED') {
-                isPaused = !isPaused; 
-                if (!isPaused) { 
-                    lastTime = performance.now(); 
-                }
-                // No cambiar gameState aquí si solo es pausa visual, pero para la lógica del juego, sí
-                // gameState = isPaused ? 'PAUSED' : 'PLAYING'; // Esto podría causar problemas si se usa para más que la lógica de update
-                messageDisplay.textContent = isPaused ? 'PAUSADO' : '';
-                messageDisplay.style.display = isPaused ? 'block' : 'none';
-                updatePauseButtonIcon();
-            }
-        }
-
-        function updatePauseButtonIcon() {
-            if (isPaused && !isAnsweringQuestion && gameState !== 'FINAL_VICTORY') { 
-                 pauseButton.innerHTML = '<div class="playIconTriangle"></div>';
-            } else {
-                 pauseButton.innerHTML = '<div class="pauseIconBar"></div><div class="pauseIconBar"></div>';
-            }
-        }
-
-        gameContainer.addEventListener('click', (event) => {
-            if (gameState === 'LOADING_ASSETS') return;
-            if (difficultySelectionModal.style.display === 'flex' && difficultySelectionModal.contains(event.target)) return;
-            if (questionModal.style.display === 'flex' && questionModal.contains(event.target)) return;
-            if (finalVictoryMessageDisplay.style.display === 'flex' && finalVictoryMessageDisplay.contains(event.target)) {
-                 handleInput(); 
-                 return;
-            }
-            if (event.target === pauseButton || (pauseButton && pauseButton.contains(event.target))) return;
-            handleInput();
-        });
-
-        window.addEventListener('keydown', (e) => {
-            if (gameState === 'LOADING_ASSETS') return;
-            if (e.code === 'Space' || e.key === ' ') { 
-                e.preventDefault(); 
-                if (difficultySelectionModal.style.display === 'flex') return; 
-                handleInput(); 
-            }
-        });
-        pauseButton.addEventListener('click', (event) => { event.stopPropagation(); togglePause(); });
-
-        // --- Carga de Assets e Inicio ---
-        // Lista de assets del código original del usuario
-        const assetsToActuallyLoad = [
-            {img: motoFoxImg, src: './imagenes/motozorro.png', name: 'motoFoxImg'},
-            {img: pipeTopImg, src: './imagenes/tuberia_arriba.svg', name: 'pipeTopImg'},
-            {img: pipeBottomImg, src: './imagenes/tuberia_abajo.svg', name: 'pipeBottomImg'},
-            {img: groundImg, src: './imagenes/suelo.svg', name: 'groundImg'},
-            {img: bgImg, src: './imagenes/fondo_juego.svg', name: 'bgImg'},
-            {img: dancingFoxImg, src: dancingFoxImg.src, name: 'dancingFoxImg'} // Ya tiene src base64
-        ];
-        let totalAssetsToProcess = assetsToActuallyLoad.length;
-        let processedAssetCount = 0;
-
-        function assetProcessed(assetName, success) {
-            processedAssetCount++;
-            if (success) {
-                console.log(`Asset '${assetName}' procesado (cargado o ya completo).`);
-            } else {
-                console.warn(`Asset '${assetName}' no pudo ser cargado (o es base64 y falló, improbable).`);
-            }
-            
-            if (processedAssetCount >= totalAssetsToProcess) {
-                console.log("¡Procesamiento de todos los assets finalizado!"); 
-                gameState = 'DIFFICULTY_SELECTION';
-                difficultySelectionModal.style.display = 'flex';
-            }
-        }
-
-        assetsToActuallyLoad.forEach(assetEntry => {
-            if (assetEntry.img.complete && assetEntry.img.naturalWidth !== undefined && assetEntry.img.naturalWidth !== 0) {
-                // Si ya está completa (ej. base64 o cacheada), contarla como procesada
-                assetProcessed(assetEntry.name, true);
-            } else {
-                assetEntry.img.onload = () => assetProcessed(assetEntry.name, true);
-                assetEntry.img.onerror = () => {
-                    console.error(`Error al cargar la imagen: ${assetEntry.src}. Los fallbacks en canvas se usarán.`);
-                    assetProcessed(assetEntry.name, false); // Contar como procesada para no bloquear
-                };
-            }
-        });
-
-        // Iniciar el bucle del juego inmediatamente para manejar el estado LOADING_ASSETS
-        requestAnimationFrame(gameLoop);
-
-    </script>
-</body>
-</html>
-```
-
-**Cambios Realizados para Integrar la Selección de Dificultad en tu Código:**
-
-1.  **Estado Inicial `LOADING_ASSETS`:** El juego ahora comienza aquí.
-2.  **HTML del Panel de Dificultad:** Se añadió el `div#difficultySelectionModal` a tu HTML.
-3.  **CSS del Panel:** Se añadieron los estilos correspondientes.
-4.  **Variables de Dificultad:** Se introdujeron `difficultyParams` (para los rangos), `currentDifficultyLevel`, `progressiveDifficultyEnabled`, y las variables `currentGravity`, `currentPipeSpeed`, `currentPipeGap`, `currentPipeSpawnInterval` que son las que realmente se usan en la lógica del juego.
-5.  **Función `applyDifficultySettings(level)`:** Calcula y establece los parámetros de dificultad base según el nivel.
-6.  **Función `increaseDifficultyStep()`:** Modifica los parámetros `current...` si la dificultad progresiva está activa.
-7.  **Flujo de Inicio:**
-    * `assetProcessed()`: Cuando todos los assets se procesan (cargados o error manejado), cambia `gameState` a `DIFFICULTY_SELECTION` y muestra el modal.
-    * **Botón "Iniciar Juego"**: Captura la selección del usuario, llama a `applyDifficultySettings()`, oculta el modal y cambia `gameState` a `READY`, mostrando el mensaje "Pulsa para empezar".
-    * **`handleInput()` en estado `READY`**: Llama a `initGameLogic()` (que es una versión adaptada de tu `init()` original que no resetea los parámetros de dificultad) y luego cambia `gameState` a `PLAYING`.
-8.  **Función `initGameLogic()`:** Prepara las variables del juego (posición del zorro, score, etc.) pero *usa* los parámetros de dificultad (`currentGravity`, `currentPipeSpeed`, etc.) que ya fueron establecidos.
-9.  **Lógica del Juego Adaptada:** Las funciones `updateMoto`, `updatePipes`, `updateGround`, `drawPipes`, `checkCollisions` ahora usan las variables `current...` para la dificultad.
-10. **Reinicio del Juego:** Al ocurrir un `gameOver` o `finalVictory`, el juego ahora vuelve a mostrar el panel de selección de dificultad en lugar de reiniciar directamente con `init()`.
-11. **Fallbacks Visuales en Canvas:** Si alguna de tus imágenes (`motozorro.png`, etc.) no carga, las funciones de dibujo ahora pintarán un rectángulo de color con una letra para que siempre veas algo y el juego sea funcional. (Ej: "Z" para el Zorro, "T" para tubería).
-
-Espero que esta versión integrada funcione como esperas. ¡Pruébala en GitHub y verifica las rutas de tus imágenes en la consola del navegador si sigues viendo los fallbacks de colores en lugar de tus imágen
+        function updatePipes(deltaT
