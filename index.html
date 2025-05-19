@@ -200,7 +200,8 @@
 
         // --- Variables para Delta Time ---
         let lastTime = 0;
-        const TARGET_FPS = 60; 
+        const TARGET_FPS = 60; // El juego se balanceó originalmente pensando en esta tasa de frames
+        // const TARGET_DELTATIME = 1 / TARGET_FPS; // No se usa directamente, pero es la base
 
         // --- Variables para el Sistema de Preguntas ---
         let isAnsweringQuestion = false;
@@ -225,19 +226,17 @@
         let lastScoreThatTriggeredQuestion = 0;
         
         let pipeSpawnTimer = 0;
-        // Ajuste de dificultad: Nivel 5 "Fácil"
-        const PIPE_SPAWN_INTERVAL = 1.332; // Original fácil: 3.33, Nivel 3: 1.665
+        // Ajuste de dificultad: Intervalo de aparición de tuberías reducido
+        const PIPE_SPAWN_INTERVAL = 1.665; // Original: 3.33 (aprox. la mitad)
 
         function init() {
             motoSize = 40; motoX = 60; motoY = canvas.height / 2 - motoSize / 2;
             motoVelocity = 0; 
-            // Ajuste de dificultad: Nivel 5 "Fácil"
-            gravity = 0.125; // Original fácil: 0.05, Nivel 3: 0.10
-            pipes = []; pipeWidth = 64; 
-            // Ajuste de dificultad: Nivel 5 "Fácil"
-            pipeGap = 190; // Original fácil: 220, Nivel 3: 220
-            // Ajuste de dificultad: Nivel 5 "Fácil"
-            pipeOriginalSpeed = 2.0; // Original fácil: 0.8, Nivel 3: 1.6
+            // Ajuste de dificultad: Gravedad aumentada
+            gravity = 0.10; // Original: 0.05
+            pipes = []; pipeWidth = 64; pipeGap = 220; // El gap podría reducirse para más dificultad, pero por ahora solo velocidad
+            // Ajuste de dificultad: Velocidad de tuberías aumentada
+            pipeOriginalSpeed = 1.6; // Original: 0.8
             score = 0; 
             gameState = 'READY';
             isPaused = false; 
@@ -248,7 +247,7 @@
             questionsAnsweredCorrectlyThisSession = 0; 
             milestonesReached = [];
             lastScoreThatTriggeredQuestion = 0;
-            pipeSpawnTimer = PIPE_SPAWN_INTERVAL; 
+            pipeSpawnTimer = PIPE_SPAWN_INTERVAL; // Para que la primera tubería aparezca antes
 
             lastTime = 0; 
 
@@ -312,8 +311,8 @@
             pipeSpawnTimer += deltaTime;
             if (pipeSpawnTimer >= PIPE_SPAWN_INTERVAL) {
                 pipeSpawnTimer = 0; 
-                let minTopHeight = 80; // Podrías ajustar esto también para más dificultad (ej. 60 o 100)
-                let maxTopHeightPossible = canvas.height - groundHeight - pipeGap - 80; // Y esto en consecuencia
+                let minTopHeight = 80;
+                let maxTopHeightPossible = canvas.height - groundHeight - pipeGap - 80;
                 let topHeight = Math.random() * (maxTopHeightPossible - minTopHeight) + minTopHeight;
                 pipes.push({ x: canvas.width, topHeight: topHeight, passed: false });
             }
@@ -364,15 +363,9 @@
                 gameOver("¡Caíste al suelo!"); return;
             }
             for (let pipe of pipes) {
-                const m = 2; // Margen de colisión
-                // Colisión con la parte superior de la tubería inferior
+                const m = 2;
                 if (motoX + motoSize - m > pipe.x && motoX + m < pipe.x + pipeWidth &&
-                    motoY + motoSize - m > pipe.topHeight + pipeGap) {
-                    gameOver("¡Chocaste con una tubería!"); return;
-                }
-                // Colisión con la parte inferior de la tubería superior
-                if (motoX + motoSize - m > pipe.x && motoX + m < pipe.x + pipeWidth &&
-                    motoY + m < pipe.topHeight) {
+                    (motoY + m < pipe.topHeight || motoY + motoSize - m > pipe.topHeight + pipeGap)) {
                     gameOver("¡Chocaste con una tubería!"); return;
                 }
             }
@@ -387,7 +380,7 @@
 
         function flap() {
             if (gameState === 'PLAYING' && !isPaused && !isAnsweringQuestion) {
-                motoVelocity = -2.8; 
+                motoVelocity = -2.8; // El impulso del salto se mantiene, pero la gravedad aumentada lo hace más difícil
             }
         }
 
@@ -563,4 +556,62 @@
                 if (!isPaused) { 
                     lastTime = performance.now(); 
                 }
-                gameState =
+                gameState = isPaused ? 'PAUSED' : 'PLAYING';
+                messageDisplay.textContent = isPaused ? 'PAUSADO' : '';
+                messageDisplay.style.display = isPaused ? 'block' : 'none';
+                updatePauseButtonIcon();
+            }
+        }
+
+        function updatePauseButtonIcon() {
+            if (isPaused && !isAnsweringQuestion && gameState !== 'FINAL_VICTORY') { 
+                 pauseButton.innerHTML = '<div class="playIconTriangle"></div>';
+            } else {
+                 pauseButton.innerHTML = '<div class="pauseIconBar"></div><div class="pauseIconBar"></div>';
+            }
+        }
+
+        gameContainer.addEventListener('click', (event) => {
+            if (event.target !== pauseButton && !pauseButton.contains(event.target) &&
+                event.target !== questionModal && !questionModal.contains(event.target) &&
+                event.target !== finalVictoryMessageDisplay && !finalVictoryMessageDisplay.contains(event.target) ) { 
+                handleInput();
+            }
+        });
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' || e.key === ' ') { e.preventDefault(); handleInput(); }
+        });
+        pauseButton.addEventListener('click', (event) => { event.stopPropagation(); togglePause(); });
+
+        // --- Carga de Assets ---
+        const assetList = [motoFoxImg, pipeTopImg, pipeBottomImg, groundImg, bgImg];
+        let assetsToLoadCount = assetList.length; 
+        let assetsLoadedCount = 0;
+
+        function assetLoadedCallback(imgEl, imgPath) {
+            assetsLoadedCount++; console.log(`Asset cargado: ${imgPath} (${assetsLoadedCount}/${assetsToLoadCount})`);
+            if (assetsLoadedCount === assetsToLoadCount) { 
+                console.log("¡Todos los assets principales cargados! Iniciando juego..."); 
+                init(); 
+                requestAnimationFrame(gameLoop);
+            }
+        }
+        function assetErrorCallback(imgEl, imgPath) {
+            console.error(`Error al cargar la imagen: ${imgPath}.`); assetsLoadedCount++;
+            if (assetsLoadedCount === assetsToLoadCount) { 
+                console.warn("Juego iniciado con algunos assets faltantes. Se usarán fallbacks."); 
+                init(); 
+                requestAnimationFrame(gameLoop);
+            }
+        }
+        assetList.forEach(img => { 
+            const path = img.src; 
+            img.onload = () => assetLoadedCallback(img, path);
+            img.onerror = () => assetErrorCallback(img, path);
+        });
+        dancingFoxImg.onload = () => console.log("Dancing fox GIF (base64) cargado.");
+        dancingFoxImg.onerror = () => console.warn('Error al cargar dancingFoxImg (base64).');
+
+    </script>
+</body>
+</html>
